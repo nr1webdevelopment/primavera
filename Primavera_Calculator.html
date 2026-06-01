@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Primavera — Franchise Earnings Calculator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ── TOKENS ── */
+:root{
+  --rose:#CF7B60;--rose-l:#F5DDD3;--rose-d:#A05038;--rose-mid:#E8B5A0;
+  --sage:#8B9D89;--sage-l:#EBF2EA;
+  --dark:#1A1210;--text:#2A1E1A;--muted:#7A6258;--border:#EDD8CE;
+  --bg:#FFFFFF;--bg-soft:#FFF8F5;--bg-sage:#F4F8F3;--bg-gray:#F7F7F7;
+  --card:#FFFFFF;--sh:0 2px 20px rgba(26,18,16,.07);--shh:0 8px 40px rgba(26,18,16,.13);
+  --r:14px;--tr:all .3s ease;
+  --serif:Georgia,serif;--sans:'Segoe UI',system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.65;overflow-x:hidden}
+h1,h2,h3{font-family:var(--serif)}
+
+/* ── NAV ── */
+.nav{position:sticky;top:0;left:0;right:0;z-index:1000;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;border-bottom:1px solid var(--border);box-shadow:0 2px 12px rgba(207,123,96,.08)}
+.nav-logo{height:32px;width:auto}
+.nav-links{display:flex;gap:2rem;list-style:none;align-items:center;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;transition:var(--tr);font-weight:500;}
+.nav-links a:hover{color:var(--rose);}
+@media(max-width:900px){.nav-links{display:none;}}
+.lang-sw{display:flex;gap:4px}
+.lb{border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.72rem;padding:5px 11px;border-radius:20px;cursor:pointer;transition:var(--tr);font-weight:600;letter-spacing:.04em}
+.lb.active,.lb:hover{background:var(--rose);border-color:var(--rose);color:#fff}
+
+/* ── SECTION SHARED ── */
+.section{padding:80px 2rem}
+.container{max-width:1180px;margin:0 auto}
+.section-header{text-align:center;margin-bottom:3rem}
+.label{display:inline-block;background:var(--rose-l);color:var(--rose-d);padding:4px 14px;border-radius:20px;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.9rem}
+
+/* Advantage banner */
+.calc-adv-banner{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:3rem;}
+@media(max-width:768px){.calc-adv-banner{grid-template-columns:1fr;}}
+.calc-adv-item{background:#fff;border-left:4px solid var(--rose);border-radius:12px;padding:1.1rem 1.25rem;display:flex;align-items:flex-start;gap:.9rem;box-shadow:var(--sh);}
+.calc-adv-icon{font-size:1.8rem;flex-shrink:0;margin-top:.1rem;}
+.calc-adv-item strong{display:block;font-size:.9rem;color:var(--dark);margin-bottom:.2rem;}
+.calc-adv-item span{font-size:.8rem;color:var(--muted);line-height:1.5;}
+
+/* Main grid */
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;}
+@media(max-width:900px){.calc-grid{grid-template-columns:1fr;}}
+
+/* Input panel */
+.calc-inputs-panel{background:#fff;border-radius:var(--r);padding:2rem;box-shadow:var(--sh);}
+.calc-panel-title{font-family:var(--serif);font-size:1.2rem;color:var(--dark);margin:0 0 1.5rem;}
+.calc-field{margin-bottom:1.4rem;}
+.calc-label{font-size:.85rem;font-weight:600;color:var(--dark);}
+.calc-label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;}
+.calc-val-badge{background:var(--rose);color:#fff;font-size:.78rem;font-weight:700;padding:.2rem .7rem;border-radius:20px;min-width:80px;text-align:center;}
+.calc-slider{width:100%;accent-color:var(--rose);height:5px;cursor:pointer;margin:.2rem 0;}
+.calc-slider-ends{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);}
+.calc-divider{border:none;border-top:1px dashed var(--border);margin:1.2rem 0;}
+
+/* Segmented control */
+.calc-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin-top:.5rem;}
+.calc-seg-btn{background:var(--bg-soft);border:1.5px solid var(--border);border-radius:10px;padding:.6rem .4rem;font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer;text-align:center;transition:all .18s;line-height:1.3;}
+.calc-seg-btn small{font-weight:400;color:var(--muted);font-size:.72rem;}
+.calc-seg-btn.active{background:var(--rose);border-color:var(--rose);color:#fff;}
+.calc-seg-btn.active small{color:rgba(255,255,255,.8);}
+.calc-seg-btn:hover:not(.active){border-color:var(--rose-mid);background:#FFF6F2;}
+
+/* Toggle switch */
+.calc-toggle-wrap{display:flex;align-items:center;gap:.9rem;background:var(--bg-soft);border:1.5px solid var(--border);border-radius:12px;padding:.9rem 1rem;margin-top:.5rem;}
+.calc-toggle-label{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0;}
+.calc-toggle-label input{opacity:0;width:0;height:0;}
+.calc-toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:26px;cursor:pointer;transition:.3s;}
+.calc-toggle-slider::before{content:'';position:absolute;width:20px;height:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;}
+input:checked+.calc-toggle-slider{background:var(--rose);}
+input:checked+.calc-toggle-slider::before{transform:translateX(20px);}
+
+/* Results panel */
+.calc-results-panel{display:flex;flex-direction:column;gap:1.25rem;}
+.calc-result-hero{background:linear-gradient(135deg,var(--rose-d) 0%,var(--rose) 60%,#E8956A 100%);border-radius:var(--r);padding:2rem;text-align:center;color:#fff;}
+.calc-result-label{font-size:.82rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;opacity:.85;margin-bottom:.5rem;}
+.calc-result-revenue{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.2rem);font-weight:400;margin-bottom:.25rem;}
+.calc-result-sub{font-size:.9rem;opacity:.8;}
+.calc-profit-box{background:#fff;border-radius:var(--r);padding:1.5rem 1.75rem;box-shadow:var(--sh);display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:1rem;align-items:center;}
+.calc-profit-label{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;}
+.calc-profit-num{font-family:var(--serif);font-size:1.9rem;color:var(--dark);}
+.calc-profit-pct{font-size:1.5rem;font-weight:700;color:var(--rose);}
+.calc-profit-annual{font-size:1rem;font-weight:700;color:var(--dark);}
+.calc-chart-wrap{background:#fff;border-radius:var(--r);padding:1.25rem;box-shadow:var(--sh);display:flex;justify-content:center;}
+.calc-table{width:100%;border-collapse:collapse;background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);font-size:.87rem;}
+.calc-table th{background:var(--dark);color:#fff;padding:.65rem 1rem;text-align:left;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;}
+.calc-table td{padding:.6rem 1rem;border-bottom:1px solid var(--border);color:var(--text);}
+.calc-table td:nth-child(2),.calc-table td:nth-child(3){text-align:right;font-weight:600;}
+.calc-table-total td{background:var(--bg-soft);font-weight:700;color:var(--dark);border-bottom:none;}
+.calc-savings-box{background:linear-gradient(135deg,#FFF3EE 0%,#FFF8F5 100%);border:1.5px solid var(--rose-l);border-radius:var(--r);padding:1.4rem 1.5rem;display:flex;gap:1rem;align-items:flex-start;}
+.calc-savings-icon{font-size:2rem;flex-shrink:0;}
+.calc-savings-title{display:block;font-size:.95rem;font-weight:700;color:var(--dark);margin-bottom:.4rem;}
+.calc-savings-desc{font-size:.85rem;color:var(--text);line-height:1.6;margin:0;}
+.calc-payback{background:#fff;border-radius:var(--r);padding:1.25rem 1.5rem;box-shadow:var(--sh);display:grid;grid-template-columns:auto 1fr 1fr;gap:1rem;align-items:center;}
+.calc-payback-icon{font-size:1.8rem;}
+.calc-payback-label{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:.2rem;}
+.calc-payback-val{font-size:1.3rem;font-weight:700;color:var(--rose-d);display:block;}
+.calc-payback-inv{font-size:1rem;font-weight:700;color:var(--dark);display:block;}
+.btn--rose{display:inline-block;background:linear-gradient(135deg,var(--rose-d),var(--rose));color:#fff;padding:1rem 2.5rem;border-radius:50px;font-weight:700;font-size:1rem;text-decoration:none;box-shadow:0 4px 18px rgba(207,123,96,.35);transition:all .2s;}
+.btn--rose:hover{transform:translateY(-2px);box-shadow:0 7px 24px rgba(207,123,96,.45);}
+@media(max-width:600px){
+  .calc-profit-box{grid-template-columns:1fr 1fr;}.calc-profit-left{grid-column:1/-1;}
+  .calc-payback{grid-template-columns:auto 1fr;}
+}
+
+/* q-trigger */
+.q-trigger{position:relative;display:flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,var(--rose) 0%,#E8956A 100%);color:#fff;border:none;border-radius:50px;padding:.55rem 1.25rem .55rem .9rem;font-size:.82rem;font-weight:700;letter-spacing:.04em;cursor:pointer;white-space:nowrap;box-shadow:0 3px 14px rgba(207,123,96,.45);transition:transform .2s,box-shadow .2s;overflow:hidden;}
+.q-trigger:hover{transform:translateY(-1px);box-shadow:0 5px 20px rgba(207,123,96,.55);}
+.q-gift{font-size:1rem;}
+.q-trigger-text{position:relative;z-index:1;}
+.q-pulse{position:absolute;inset:0;border-radius:50px;background:rgba(255,255,255,.2);animation:qPulse 2.2s ease-in-out infinite;}
+@keyframes qPulse{0%,100%{transform:scale(1);opacity:.3}50%{transform:scale(1.06);opacity:.08}}
+@media(max-width:900px){.q-trigger-text{display:none;}.q-trigger{padding:.55rem .8rem;}}
+
+
+/* ── NAV DROPDOWN (click-toggle) ── */
+.nav-links li.has-drop{position:relative;}
+.nav-drop-btn{color:var(--muted);font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;font-weight:500;background:none;border:none;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:5px;padding:0;transition:color .2s;}
+.nav-drop-btn:hover,.nav-drop-btn.open{color:var(--rose);}
+.nav-drop-btn .caret{font-size:.55rem;line-height:1;display:inline-block;transition:transform .22s ease;}
+.has-drop.open .caret{transform:rotate(180deg);}
+.nav-dropdown{display:none;position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%);background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 10px 36px rgba(26,18,16,.13);min-width:190px;padding:.5rem 0;z-index:2000;animation:ddFade .18s ease;}
+@keyframes ddFade{from{opacity:0;transform:translateX(-50%) translateY(-6px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.has-drop.open .nav-dropdown{display:block;}
+.nav-dropdown a{display:block;padding:.6rem 1.3rem;color:var(--muted);font-size:.78rem;text-decoration:none;letter-spacing:.06em;text-transform:uppercase;font-weight:500;transition:color .15s,background .15s;border-radius:6px;margin:1px 4px;}
+.nav-dropdown a:hover{color:var(--rose);background:var(--bg-soft);}
+
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="Primavera_Report.html"><img class="nav-logo" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4QBsRXhpZgAASUkqAAgAAAADADEBAgAHAAAAMgAAABICAwACAAAAAgACAGmHBAABAAAAOgAAAAAAAABHb29nbGUAAAMAAJAHAAQAAAAwMjIwAqAEAAEAAAAABAAAA6AEAAEAAAAABAAAAAAAAP/bAIQACQYHCAcGHx4hFx8fHR8dJSIdIh8dIR8lHyYiHh4iIiAlHyAlJR0lJSYlHx8lJiUfIi8tJS0oJS0uMCU1KScyJQEKCgoPExUQEhUSLRcfHSktMjIqLzEtMykzNSU3Li01Mi4qJSUtNjE9NjkzNjIvNjctMTI1MTUlLTExLiYvMCU5/8AAEQgEAAQAAwEiAAIRAQMRAf/EABsAAQEAAwEBAQAAAAAAAAAAAAABBAUGAgMH/8QAOhABAAEDAgIHBAkEAgMBAAAAAAECAwQFESFxMUFRYYGRwRI0sdETFSIyM3Kh4fAUNUJSJPEGYoKS/8QAGQEBAQEBAQEAAAAAAAAAAAAAAAEDBAIF/8QAKxEBAAICAQMEAQQBBQAAAAAAAAECAxExBCFBEjJRcRMUIkJhUmKRoeHw/9oADAMBAAIRAxEAPwD9cAR6AEAAAAAAAAAAFABAAAAAAAAUAAAAAEABQAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAABAAAAAAAAAAUAEAAAAFBUFBEAAAAAAAFABAAEAAAAAFUAEAAABQAAAAAAAAAAAAAAAAAAAUAAAEAAAAABQBEAAAAAAAAAAAAAAABQAQAAAAAFABBQEFAQUBBQAAUAAAEQAAAAAFAAAAAFQAAAFAEAAAAAAQAFAAAFABAAEAAAAAAAAABAAVFQAAVQAAAAAAAAAAAAAAAAAAAAAAAAAAAUAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEQAVQAAAAAAAAAAAUAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEABUABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAQAVQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABFAB5AFUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAFAAAAAAAAAAAAAAAAABAAAAEVFFUAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQBAAHkAVQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAABQAAAQAFAAUAAAR5AFUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAFAAAAAAAAAAAAAAAAABAAUAAAAAAAEAAABQAAAQAFAAAAABAAAAAAUAAAAAAABQAABHkAVQBAAAAUAAAAAAAAAAAAAAAAAAAEABQAAAAAAAAAAAQAFAAAAAAAAABAAAAAAUAEAAABQAAAAASQAAAAAUAAAAAAAAAAAAAAAEAAAAABQAAAAAAAAAQAAAAAAAAAAACQABUUUAEeQBVAEkAAAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABJAAAAABQAAAAAAAAAAAAAAAAAQAFAAAAAAAAAAAAAAAAABAAUAEAAABRUUAAR5AFUAAAQAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAUAAAAAEABQAAAAAAAAAAAQAFABAAAAUAEAAAAAA2AAAAAAAAAAACgAiACqAAAAAAAAAAAAAAACgAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAKACAAAAoAAAAAAAAAAAAAAAAAAAAAAAIABsAAAAAFABAAAAAAAAFAB5VFFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAUAAAAAAAAAAAAAAAAAAAAAAAAAEABQARAAUAUAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAQAAAUAAVFEFRQQAEVFFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAUAAAAAAAAAAAAAAAEAAABQAAAAAAAAAAAQAAAAAAVFFQARABVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEABQAAAQAAAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAUAAAAAAAEAAAAAAFRQQAEAFUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAFAAAAAAAAAAAAAAFRRAkJB5AFUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAFAAAAAAAAAAABAAAAUAAAAAAAAAAAAAAAAAAAAAEABQAAAAAAAAAAAAAAAAAAAQAAAFAAAAAAAAAAAAAAABAAEAFUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAFAAAAAAAAAAAAAAABAAEAFUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAFAAAAABAAUAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAABQAAAAAAAAAAAQAAAAAFABAAAAUAAAAAAAAAAAAAEAAUAHkAVQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAUAAAAAAAAAAAAAEAAABQAAAAAAAAAAAAAAAAAAAAAQABQAeQBVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAFAAAAAAAAQAFAAAEAAAAQAVQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAUAAAAAAAAAAAAAAAAAAAEAAABQAQAAAAABIWEhYFABAAUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEABQAAAAAAAAAAAAAAAAAAAAAQAFAAAAAAAAABAAAAAAUAAAAAAAEAAAAAAAAABQAAAAAQAAAAABFhFgUAEABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfO7ftWumYjm+hsAAAAAAABAAAAUAAAAAAAAAAAAAAAAAAAEABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAABQAeVhFgUAEABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQBKqopgVLtyi1RvM7Q0uZqtdXCnhHb1z8mPqGbVmXP/WOiPVibML5PEO/D08R3ty9ca6u+XWQ5vTbU3cyO6d/J0j1i8s+qmP2woDVyAAAAAAAAAAgAKAAAAAAACAAAAAAAAoAIAAAAACgAAAAAAAAAAAAAAAAAgAAAKAAAAAAAAAAAAACAAAAAAIsIsCgAgAKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwdXyq8WzG07TMpadPVa7nTOGrxNWprnarh39X7NpExMEWiS1JjmBq9dyYpsxT1zxnk2jmdWr9vUJ7uDxknUNenru30xVeYZmBiTl3e6On5OaI8Po2tERMy2GiWJptTV29HLt8WzIpimEqqpo6ZiObrrWIh8q9pmZl7gfH+qxo/zjzh9KblFccJieT1t59M/D0AIAAAAAAAAAAAAAAAAAAACAAAAAAoAIAAAAACgAAAAAAAAAAAAAAAgAAAAAKAAAAAAAAAAAAACSAAAAAAiwiwKACAAoAAAAAAAAAAAAABvHant09secPF+xbyKNpjeGDe0jHmnhwnq63mZnxD3WKzzOmx9untjzg9untjzhylVPs1G0Mvy/wBOj9L/AKnVTcpjrjzhPprfbHnDBtaZizajh1R1vp9V4nZPnLXdvhhMUjz/AO/3ZcXKJ6484emur0fGqjrjxYtzTcmzO9NW/wCk/wA8Um0/CxSk/wAm7HO29Qy7NXT5x/J/VsMbV6LnTG3wSMkLfBaO/LZCUzEwrRiAAAAAANHr8/8AIjl6t40uu0TFVM+Dxl4lt0/uhq54tlpWd9DV7M9HV3d3JrV3c8W0771i0al1u7lcyN82rm32m5H0+L3xwlj16dFzMmZnhPU2v3iNOPDMUtbbXYWFXk193XLb3b2Pp1nbyjrnvec/LjDtbR09Xc0dUzVVu8dq8ctdTk7z2hmZGqZF3uju+bCqmap+ZsbPEzLorSI4hG00K1vemrqjg1tNM11bR0z0OlxLEY2PEefN6xRO2PUX1XXy+wDpfPUAAAAAQAAAAAAAFAAAAABAAUAEABQAAAAAQAFABAAUAAAAAAAAAAAEAAABQAAAAAAAAAQAFAAABAAAAAAEWEWBQAQAFAAAAAAAAAAAAAAAAc1qMbZ1XN8GRqXv1XP0hjuOeZfVrxX6dRa/CjlHwe3i1+FHKPg9ux8ueZABGLn4dGVb7+qXPzE0z3uqaXWrEW7sVdvSyy18urp8v8ZfLTs6rGq2n7vwb+Kt3Jt5o16bliY7PhP8lMd/D11GL+UNiEDZxgAAADE1PH/qMXvjjDLSSYWttTEuR3VudS06btU1Uxx647e/m08xMVOS1Zh9LHki0bbLRKpi5MdzYTlWomePGI3lrNJqi3VVPVFLKw8aL+HO/TVxa03qIc+WI9Vpn+mrv3ZvXd3zbCrSL2/CYn9Pmn1Tkdsef7M/Rb4dEZado2wHq3bru17RG8trZ0infjV5NhZs27NPCNnqMc+ezPJ1MRx3Yun4EY1O8/e+DNBvEdnFa027yqoqvIAAAAAAAIACgAAAAAAAAAAAAAAAAAAAA+OVlWsWjeZ5d7RZmpXsjujsj5vFrxDXHhtZucnUMbGq2md57I4sG5rczHCnzay3jX7kcKZ8mRGm5n+v6wym9pdUYcccy9zq2XPZ5JGqZnbHk8Tp2ZH+P6w8VYmTT/hPk8+q716cXxDNtazcpjjTE8uHzbHFz7GTPTtPZLmp4S9RKxktH9pbBWeOzrUajTdRneKap5T6S227etolw3pNZ1KgPTyAAAAAAAAACAAoAAAAAAAAAAAAAAAAAIAAAAiwiwKAAAAAAAAAAAAAAAAAAAA5vUvfqufpDGlk6l79Vz9IY0uOeZfVx+2Pp1Nr8KOUfB7eLX4Uco+D27Hy55kAEGDrNEVYPKY+XqzmJq0b6fV/OuHm8dpe8Xur9udhsNGrmnM5w10M3Svfo8fhLlrzD6OWN1l0IDsfLAAUQAABJfHIxbORHGH3CYWJmGoy8amxbimnfeurr7m0opimjbse9hIrp6taZQUV4ABAAUABRAFEAAAAAAAAAUQBRAFEAUQBRAFAAAAAAYmfnU4lHbV1R6y9Z+VTi2O/qhjafg1U3Paq41Tx49X7/B5mfENaViI9U8MWzp9/Mue1VO2/n5dXi2djCx8eOFMfGWRCyVpEF81p/qHkVHrTJYCAEroorjjG7Dv6XjXerbl8uhmiTWJeovaOJaHI0u/a6PtR+vk3GHFz+ljfp24vtMIkUiOHu+WbRESoD0yAAAAAAAAAAUEBQAAAAAAAAAAAAAAAABAAAAEWEWBQAQAFAAAAAAAAAAAAAAAAc1qXv1XP0hjSydS9+q5+kMaXHPL6tPbH06q1+FHKPg9vFr8KOUfB7dj5c8gAgwdZqinAnvmPizmm169FVUU+MvGSe0tcNd2hqmw0amas3lEtfDd6LY9ixNX+3wYUjcw7s1tVlk5WfYxq9p33YlzWaduFPnPpDZzTTV0xvzc/quNTjZHDomOHc1yTaO7lw1xz20ZOo5N6OnaOyOH7t1p0zODTycy2t3IrowKKKfvVR+n7vGO3O5bZscarERpkZeqRRc2pjef0/dhX41KbMzMzEdfHb4NphYdGJa7+uXz1j2vq+fDfze5ieZljW9YmKxDRU5F6J+9PnLZ6dqdybm1XHq3+bU7rRE1XI5sazMOu+OJjWnTZWXbxY47+EMG5rNG/CmfGdvm2bW6vi26seattpjs63Rf1cxLixemZiJhg3tUyrnXty+fS+2h1VVZNU79Xq1jZ6D+NVy9WNbTMw6slIiltQ3cPlfyLePRvPR5vsm0S6JfOhrq9Yt7cKZn9Pmw72q5NfZHJl6xi0f0+8RtMdOzSsLzbzL6GGmOY3EN1o1yu5NW8zPR0zzZ2Rk28ejj/ANtXpNymzarns29X0w7FWZc9uqOUfz+S9xadREMclI9Vpnh5qys7K+7TtH865Y17EzYjeYmfHdv1Wce+ZeIz64q5am7doq4TMeLYYerVxVtV5/P+eb6a1iUxR7UePzaaeLKd1l1Vit43p10TEw+d+9RYt7zPBg6XlU04M7z934dT549urUrvtVfdjojtbev45cn4tTO+Iea9Qysqr7NPDt/fofG5Y1Gf9vP927poimHuE/HvysZojisOYpyMi3X96qPGWdi6vXTO1XGO3r+TM1TEpv2N+uOP7NBDO3qrPLpp6bxw6umqK6VanRb+0zT4x6w2zattxtw3p6Z0A1et5U0R7MT09PLs8VtOo2Up6p09ZWrW7c7RG/f1PhZuZ+b/AJbR5R82sjjU6q1bptW4jsY1mbeXVesUiNRuZYEabNXTcqeLunZFun7NyrlMtoNfRDnjLZoreoZViraePbEx6tph5tvJ7p7GJrdmPYirr6Jaq3XVbuRMdTGbTWfl1Rjreu+JdFlf1Ps/ZmPFrL+oZ+PVtO3k2uPejIsRPamXj0ZNnafDulrasz3iXPS0ROphpvrjL7vI+uMvu8mBVTNFT1Yqii9E9kx8WHqt8u+cdP8AFvbX1pco33pjnDOo9qKOPSsDpiHzLW340ogryqV1RRRv1QrXajVN+9FEc6u6P56JMvVa7l5w6asy/wC3McP8I7O/+dfg2MJRTFFLC1PPjFjaPvT+nf8AJ5idR3e+951EMjJy7ON0z4dbBpzM3LubUxER29jW49FeTkbdc9M+rpLNmizb2h5iZt57Nb0pT+5YMaffqjjdq37irT8mmOF2fFsNh69EMfzS0s5udh1bVcf52s/D1Gzkzt0T/Oh9cvGoyrO0+E9jmaomivbseLTNZ+YdFa1vE9tS60a3S8+b/wBmZ49Xf+7ZtYttzXpNZ1LXXNXx6Z6JY13Wa9uFMRznf5NtetUXaNpjdzebZjHyZjq6mV5tHl04a47dtPd7UMm7/lty4fu6K3xtxycm3OddqyLkW6euOP8AOXGfBMdp7vWbHH7YiNF/U7l2vaiN+/5fOWHmUZluneqqf/16RwbvFx6Me1tHj3tbrn3qfH0W0Trcy8YrR6orEdmvt5F+3PCqfP5tzpufOVO09PxhomVpfv8AHj8GdLztvlx1ms9uHR7MHK1K1Ynbpn9I8XnV8qrHxuHTPD5tG1vfXaHNhw77y2VGTn5tXCYj+dvSyI02uqONyrwZGDRFGJTy3ZC1r8y8WyamYiNQ11em3ojhcnxYc5mdi3Npnwni3zA1bHi5i79ccfml6dtw9Y8u5iLRtcLU7eRO08J+LP3cj1ui0zKqycfj0xwkx332lc+HXeGYINXMoAAAAAAAAAAAAAAAAAgACKgKoAgAKAAAAAAAAAAAAAAIqA5vUvfqufpDGlk6l79Vz9IY0uSeZfVp7Y+nV2vw45ekPTxaqp+ijj1ekPXt09sOt8uVHyuZNm3H3o82HkatZiOEbz5Q8zePl6rjtPEMzJyKMa1vP/bmr1dV67Mz0y+l27ey7nb3RHQzMXSqq/vcI7Ov9mNpm09nXjiuONzPdi6fiTlXu6On5OippiinZLVui1b2iNoh6a1rpz5cs2kajXumnx9G3anXv8fH0MnEmD3Q1DaaNam5fmZ6o2hq2+0aiKcPnMsccd3Z1E6rLPeblMV0bdU9L0S6HzdtLd0av2uFUbd/SyMHSox7u8zvPV2NnA8xjhtOe8xraMbUPcquTKhj6h7lV+WXueJZ05hzTZ6F+NPL1axs9B/Gnl6uTHzD6Wb2WboB1vlsfUY/4NXJzMS6bUPcavyy5lhl5h3dLxL749FV+9FPbMfo6XaIaPRqIqy+UT6N5C4o7bZ9VPeIegGzlfLNoi5i1R3T8HLOtuxvRPKXJsMscO3pP5PdHtVcO101m3TatREdUbNBplPtZ1PPfydFsuKOXnqrcQoDZyDlb1Ps5FUdkuqczmxtm1c2WXw6+knvL1g1exmU8/i6Ry9idr8c4+LqDD5Tqo7wOf1mmYzfCHQMbOw6MujsmOiXrJG4ZYbxW25c23Wk5t6/c2mN+HSxPqnI9vq27d20wcWnEt7dc9LLHS23TmyUmPllAOhwsTVY3wJ/nW53d0eqe4VcnNw58vMO/puJbvQq5nHmOyfi2bUf+P8ARV4erbtcXEOXPH7rNBrdiLWTv/t8WudJquP9PhT2xxjw/bdzmzDJHd2YL7q6TTMj6bDjtjhPgy2k0K9FF+Y7Y4eDduik7iHFmrq0gD0zS5XFujfqiN5YOmU1V0zXPTVPlC6pX9JEUR01Tx5MymmKaXiO8/TTiPt5vXKbNmZnqhy9+5VevTM9Mtzrl2abER29Pg0bLJPfTr6Wmo23GhWeE1eEerbsPTaIt4NPLfzmWXEtqR2hyZbbtKgPbMc/rNEU5vOIl0DSa7O96OXqyyx2dHTe5r7Nc27kT2S6mzdpvWontjdykOi0eqatPjxj9WeGeW3VR2iWZLntb998I9XQy0Ot+9+HrLTLwx6b3NdDdaLRMxNU9Mzt8/53NNs6PTqIowaeTLFHd0dRP7WSx8rHoybe0sgmHQ4InXdpZ0a9vwqj9YZun4FOJx33meG/ozYXZ5ikNLZrzGplp9epnamecfBq4dPk2aMizMT0S1NWjX6auExMeTLJSd9nRhy1iupldMzr0XIp6Yn9G62YWBgxi8emfgzW1ImI7ufNasz2Hm5TFduY7XomdnplHLkpjaWy0OuYyZjtj4NbM/aZ2jztneEuWvMPp5Y/bZvwHU+YoAAAAAAAAAAAAAAAAAgACACqAAAAAAAAAAAAAAAAAAkqkg5vVPfqufpDGhk6r/caufpDGhyTzL6tPbH03dvSMSaI4T0dr39T4kdvmy7X4cco+D6On0V+Hz/y3+WFTpWLHVPm+tOBi0/4x8WSL6Y+Hmclvl4oppo6I8o2epXZFiHiTYUERqde/wAfH0bZqde6KfH0eMvEt8HuhqHRaXG2DT/OuXOuj0z3Cnl6yyxR3dPVe2GUA6HAAAMfUPcqvyyyGPqHuVX5ZSeJeqcw5ps9C/Gnl6tY2eg/jTy9XLj5h9LN7LN0A63y2Pne41fln4OZh02f7jV+Wfg5mGGbmHd0vFm10P8AEnk3DT6HP26uUerbw9Y+IYdR7pegGrBKvuzycnDrKvuzyclDHN4dnSfyZ2ke/Ryn4Ogc/pHv0cp+DoFxcS8dV7o+gBq5hzWf/cKvzOlczqH9wq/Myy8Q6uk5l4s/jRzj4upctZ/GjnHxdSmLyvV8wATMUw2chsmzV5Wr0RV9mN++fk1/t5edc24z+kR5M5yxxHd0V6eeZnTe3c3Hs9NUeHFizqlV2ramiZecXSbdqOPGf0+fm2MRtCx6p/p5mcccRtrMy3mXMWZqqjaI39mPm0+7o9Q9wq5ObY5I7urp7biW40D/AC8PVt2o0D/Lw9W3bY+IcvUe6SeMOWzLH9NkzHlydS1Gu2ZmIq8JTJXcPXTW1Ovlq7NybV6J7JdTaqi5Rv2uTb7RL03MTbs+HUzxT3016qu4iWwB8M699BizPdtHOXRMuKI3MQxcaf6nUaquqnhT/P50tgxtNsfQYUdvTLJeacNMk92j1yqZyvBrtmdrXv8A4R6sFzX5l9DDH7at1j6jj27ERx4Rt0Pr9a4sdvkyMPjixyj4PtMOiInUd3Daa7nswfrfF7/I+t8bv8mdCrq3y87p/j/z/wBNbXrOPTHRVPg1OXkVZN+ZdQPNqTPl7plrXirkYdFpNM28CPGfOWYFcejLn9URGtDRa3754est60Wt+9+HrJl4Om9zAdRY/CjlDl3U2vwo5PGHy26r+L2A3cQAASNZl6taonaOM/ok2iOXqtJniGyfK7lWLXTVH85NHXk5WVXtvM90M3G0qiPvce793j8kzxDacUV91n0q1aiurammap8vn8CbeoZPTMUR2Rxnz/dm0UUW44REcnvZ69M+ZePXEcQ5OfvM3SPfo5Swp+8zdI9+jlLmrzDvye2306BUV1vlgAAAAAAAAAAAAAAAAAgACACqAIACgAAAAAAAAAAAAAAAOa1T+41c/SGNDJ1X+41c/SGNDkty+rj9sfTq7X4cco+D3Dxa/DjlHwe4db5cgA8gAoAA1H/kH3KfH0bdqP8AyH7lPj6PGXiW2D3Q07o9K9wp5esubdJpXuFPL1lli5dPVe2PtlgOhwAADHz/AHGr8sshj5/uNX5ZSeJeqcw5ltNB/Gnl6tW2mg/jTy9XLTmH0s3ss3QI63y3wzvcavyz8HMw6bN90q/LPwcxHQwzcw7uk4s22hffq5R6txDTaH9+rlHq3MPePiGHUe6VAaMEr+74OSdbX93wckxzeHZ0n8mbpHv0cp+DoXPaR79HKfg6FcXEs+q90fQA1c45nUP7hV+Z0zmdQ/uFXNll4h1dJzL52Px45x8XVuUsfjRzj4urTF5XquYHO6nm1ZN3b/H4tvqt2bWDPfw83NGW3helxx3tL6W6Krle3a6PDxqMa1tHj3tXoluKr8z2R8W7gxV8p1OTc6DYVs5GLqPDAq5OcdHqfuFXL1hzjny8w7+l4ltdA/y8PVuGn0D/AC8PVuGuPiHN1HusPllWYyMaY7Y/6fUe5+GMTrUuRiJiWdpV76LL7p4fI1ixFrM37eLDpn2ZcvEvqdr1+3WQ1uoz/UZdNHVvvP8APNm2LtN21E9sMLTom/k1V+Efzyb28Q4KV16p+GyAe2W2h1uiYyontj4MButdte1Zieyfi0jlyR3l9LBb9sOi0q5FeBT5fqzGn0O9G0x4x6tvEuik7iHFlrq1lAemQAADzFymqqY36OkNK0Wt+9+HrLetFrfvnh6yzy8N+m9zXuqs/hxy9HKuqs/hRyj4PGHy26r+L6AN3EA8ZFf0ViZ7IJIhp9Yzprn2Ynh1z29zWU0zMpO8yzNKtxczo7uLlmdy+nFYpX6bfBw6cWjv62WiumI8PnWnc7ACXmHJz95m6R79HKWFP3mbpHv0cpcteYfUye2306BUV1vlgAAAAAAAAAAAAAAAgAAACACqAIACgAAAAAAAAAAAAAAAOa1X+41c/SGND6ZlyLuXVPVMy+cS455l9anEOrtfhxyj4PcMbAu03sWJ7tpZMOyJfKtGpmAAeQAUAAaj/wAhn7NPj6Nu0eu3IqvxHZHxeMvEt+nj90NW6TSvcKeXrLm3QaLXFWHylli5dHVe2PtngOhwAAD4Z/uVX5Zfdh6vdpt4E9/CEtPaXqnMOdbTQfxp5erVQ2Oi3Kacrbthy15h9LN7bN8A63y3wzvdKvyz8HMQ6TU6opwauW3m5uHPl5d3Sx2ltdC+/Vyj1biGj0WuKciY7Y4N3EtMfEMOo90vQG7Rg83Pu+Dk4dRmXKbWNM9zl4YZZ4dnSx7mbpHv0cp+DoXOaXXFGfT38POHRvWLiXjqvdH0ANXMOZ1H+4Vc3TOVyq4uZdU9syxzT2h1dJzMrj+8Rzj4uqcjTO1TrKLkV0b9U9Bhnl66qOGDrkf8Dxhz7qcu19PjzHbDmKqJoq263nLHd66a3aYbXQp+1V4erbw5nCyf6XI36uvk6S3XTXTvHQ0xTGmPUVn1beweLtyi1RvM7Q0mXPpiavcijC5y0DZ3Iu59uatuERPs9/8AOtq3LkncvodPGo02ugzxq8PVuWk0KqIuzHd/Pi3NdUUUbt8fEOXPH7peh88a9F+zv2vo9sZhgaxY+lxN+uOPzaJ1dURVDlr1qbF6Y7JYZa99u3pr9pqy8bM+h06qOvq8elt8GzFjFiO748WgwrUX8uI7+Pg6dcXfu8dR27fIA2cj55Fqm9ZmO2HL10VWq9p6Y6XWNbquB9PT7Ufej9WeSu3V0+TXaeJajHvTYvxP873SWrlF23ExPCXKsnDzbmJV2x1x6s6X03z4vVqY5dNAxcbNsZEcJ49k8JZToiYcFqzHMAMLJ1OxZjtnsj1lJtEcrWkzxD652TGLY36+qO950+xNqxx6ZneWNhWbuRe9urwj+dXY2cPMd+73bUR6TZodb988PWW+c7q9ym5nT3cPm85uGnTe5iOotfhRyj4OXdJg3ab2JE923k84vLTqo7RLIUG7iHwz4mrBq5Puu28ErWdTEuPZ+jT/AMz/AOZ9GNmY84uTMeXJ5x7s2L8T2S5I5fUvHqrOvLqN3p8rF2i/b3h9YdUS+VMTA+WVdps2Jnu4PrMxENXeqq1PI9mJ+xHTPbPd/O/sS0veOu+88Q0zO0j36OUsKY2llaZV7OdH86nNXmH0cntt9OjVHzx8ijIiduqdnXt8vT6gAAAAAAAAAAAAAACAAAAICigAgAKAAAAAAAAAAAAAA+d6q5TRwjeexr8n6yvUTHsxET2S2gkxt7pfXjbm50vM/wBf1hY0vM/1/WHRjx+KGv6m3w0eNjahjVcPjDYWa8/2o3pjnuzBYpry8Wy75hIUHtjIAKAAwr93UIq4URzmfRqq9Oza6t5jjzh0SPE035a0y+niHOfVmX/r+sMjHxM/Hq3iP1hu1T8UPf6i3mGLj15ldf2qYiO2JZINIhhad+AARj5VzJomPZpie3edmry8XUcqrjEd0bxwbyDZ4mu2lMnp8ObjS8zsjzh7p0zNpno/WHQwJGKGv6q3w1+PVqNNXGmme2d+P6MrIqvUR9mmJnnts+0D3pjN9zvTS5mPqWXVxiOUTDG+q8zsjzh0Y8Tj35aV6i0doiHP0afnW694j9YbHGr1D2o3pjbrmJ/dn7Gyxj15S+abcxBs+ORN6mj7MRM977K96YxLTZdjUsnpiOUTDG+q83/WPOHQqznHvy3r1Fo4iHO/Veb2R5w2FmvU6KeNMT377Nkixj15S+ebcxBBVv7PeK9sWpyo1W/Rt7MRE9ksD6rzf9Y84dLAznHvy3r1ExxEOcjS83/WPOGViWdUxY4REx2TLchGPXlbdTaeYh8rP0lVvjG09m+7FztPoyuPRPx5s4aTXfZjF5idw5i9g5VieNPjHFLGVfx6uE+H7OplNmX4viW/6ncamu2koz9Qu9FO/hP/AE+9vT71+uJrnf8A9er5eTaK9RT5nbxOb/Gunz22hos7Tb1m5MxG9Pd1eDoNhbV2mPJNXL2Pp7NzeInflLZ27WZn1fa+zT2R1/zvbXYeYxf293z77+nulMRTCg0c2xqNXwrty7ExG/VPo24lo3GnvHkms7hrNHw7liZmY234Q2YFa6L3m07UBXkSVAYGbplrLnfoq7Y6+bUX9OyrE/d3744/u6YZzjiW1M9q/wBuQ9n2Ze6Lt2n/ACnwmXVzTEpFMQ8/h/tr+q/0udow87Jjon/6nh+rY4WlW7FW88Z7OqPn4tkbPcY4+2Vs9p7cAD2xa2/XqtyOFMU8pYE6Xl9n6uiHiab8tqZ5rxEOc+rMvsjzh9sbF1HHq4bd8bxtLeDz+OPl6nqbTzEMXHrypq+1TEd8Tv8AoyoI4K1iGFp34ABHwzMW3l2tp8J7GiyNOybHVvHd8ul0hDxNIlrjzTVylq9ex6+EzH87Gdb1PMrnhTE+E+jejzGOf8nuc8TzRqacTLzPvztH+sfz4tjatUWaNo6H1HutYhlbJMtLqWm3Ju+1TG+/THr4tfFu7audE78pdUPE4oa16iYjUxtqaatQyqNtvZjrnb9O1sca1Rj2YiOp9TZ7iumVr77RGoAHpmAAACgAAAAAgAKACAAAAIsIsCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAKAAACAAAAIAKoAAAAAAAAAAAAAAAAAIAAAAAAqKAAAAAAAAAACAAAAoAAAAAAAAAAAAAIACgAACAAoAIACgAAAAAgAKACAAAAIsIsCgAgAAAKAAAAAAAAAAAAAAAAAAAAAAAAAAACAAoAAAAAIAAAAACgAAAAAAAAAAAAAAAAAAAAAAAgAAAAAKAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAIsIsCgAgAAAKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAIsIsCgAgAKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAoAAAIAAACgAAAAAAAAAAAgAAAAACLCLAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAACgAAAAAAAAAAAAAAAgACLCLAoAIACgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAKAAAAAAAAAAAAAAACAAAAAAIsIsCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAACLCLAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIACgAAAAAAAAAAAAAAAAAAAigA8rCLAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAoAPKwiwKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAKADysIsCgAgAKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAKioCLCLAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAACgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAACLCLAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAoAIAAAAACgAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAIqAqgAAAAAAAAAAAAAAAAAAAACAAoAAAAAAAAAAAAAIACgAAAAAAAAAAAAAAAAAAAAAgAKAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAKAAAAAAAAAAAAAAAAAAAAAIAAAAgAqgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAoAAAAAAAAAAAAAAAAAAAAAAAIACgAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAACgAgAKAAAAAAAAAAAAAAAAAAAAAAAIoAPIAqgAAAAAAAAAAAAAAAAAACAAAAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAAAAAAAAAAAAgACACqAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgACACqAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgACACqAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgACACqAAAAACAAAAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAACgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAIAKoAAAAAIAAACgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAgAqgAAAgAAAAAKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgACACqAAACAAAAAAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAACgAAAoAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAgAqgAgAAAAAAAAAAAKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAoAKAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAIAKoAIAAACgAAAAAgAKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAoAAAKAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACIAKAAAAoAAAAAAAAAIACgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAKAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAoAAAKIAogCiAAAAAAAAAIAAACgAgAAAKAAAAAAAAAAAAAAACCgiCgqCgAoDyKACgIKAgoCCgIKAgoCCgiCgqCgIKAgoIgoCCgIKCoKAgoIgoCCgIKAgoCCgIAAKAgAAoKgoCCgIKCIKCoKAgoCCgiCgPIoCCgIKACgIKAgoCCgqCgIKAgoCCgIKCIKCoKCIAKACAAAAAAAAAAAoCCgqCgIKAgAP//Z" alt="Primavera" style="cursor:pointer;"></a>
+  <ul class="nav-links">
+    <li class="has-drop">
+      <button class="nav-drop-btn"><span data-i18n="nav_explore">Explore</span> <span class="caret">▾</span></button>
+      <div class="nav-dropdown">
+        <a href="Primavera_Report.html#market" data-i18n="nav_market">Market</a>
+        <a href="Primavera_Report.html#countries" data-i18n="nav_countries">Countries</a>
+        <a href="Primavera_Report.html#tech" data-i18n="nav_tech">Technology</a>
+        <a href="Primavera_Report.html#swot" data-i18n="nav_swot">SWOT</a>
+        <a href="Primavera_Report.html#regulations" data-i18n="nav_regs">Regulations</a>
+        <a href="Primavera_Report.html#financials" data-i18n="nav_fin">Financials</a>
+      </div>
+    </li>
+    <li><a href="Primavera_Franchise.html" data-i18n="nav_franchise">Franchise</a></li>
+    <li><a href="Primavera_Startup.html" style="color:var(--sage);font-weight:700;" data-i18n="nav_startup">📋 Startup Guide</a></li>
+    <li><a href="Primavera_Calculator.html" style="color:var(--rose);font-weight:700;" data-i18n="nav_calc">💰 Calculator</a></li>
+  </ul>
+  <div class="lang-sw">
+    <button class="lb active" onclick="setLang('en')">EN</button>
+    <button class="lb" onclick="setLang('zh')">ZH</button>
+    <button class="lb" onclick="setLang('es')">ES</button>
+    <button class="lb" onclick="setLang('pt')">PT</button>
+  </div>
+  <button class="q-trigger" onclick="openQuestionnaire()">
+    <span class="q-gift">🎁</span>
+    <span class="q-trigger-text">Comparte tu opinión · Recibe un regalo</span>
+    <span class="q-pulse"></span>
+  </button>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     FRANCHISE EARNINGS CALCULATOR
+══════════════════════════════════════════ -->
+<div id="calculator" class="section" style="background:var(--bg-soft);overflow:hidden;">
+  <div class="container">
+    <div class="section-header">
+      <span class="label" data-i18n="calc_label">Herramienta interactiva</span>
+      <h2 style="font-family:var(--serif);font-size:clamp(1.8rem,4vw,2.8rem);color:var(--dark);margin:.5rem 0 1rem;" data-i18n="calc_h">¿Cuánto puedes ganar con Primavera? 💰</h2>
+      <p style="color:var(--muted);max-width:620px;margin:0 auto;line-height:1.7;" data-i18n="calc_sub">Ajusta los controles para tu situación real y ve en segundos tu ingreso mensual estimado, costos desglosados y la ventaja financiera de trabajar con nuestra cadena directa de fábrica.</p>
+    </div>
+
+    <!-- Primavera Advantage Banner -->
+    <div class="calc-adv-banner">
+      <div class="calc-adv-item">
+        <span class="calc-adv-icon">🏭</span>
+        <div>
+          <strong data-i18n="calc_adv1_t">Costo de producto más bajo del mercado</strong>
+          <span data-i18n="calc_adv1_d">Fábrica directa FDA en China — 12% del ingreso vs. 22-28% con marcas genéricas</span>
+        </div>
+      </div>
+      <div class="calc-adv-item">
+        <span class="calc-adv-icon">📣</span>
+        <div>
+          <strong data-i18n="calc_adv2_t">Marketing 100% incluido</strong>
+          <span data-i18n="calc_adv2_d">Campañas digitales, lanzamientos de temporada y contenido listo para usar — sin costo extra</span>
+        </div>
+      </div>
+      <div class="calc-adv-item">
+        <span class="calc-adv-icon">🌸</span>
+        <div>
+          <strong data-i18n="calc_adv3_t">Marca en evolución constante</strong>
+          <span data-i18n="calc_adv3_d">Colecciones nuevas cada temporada, tendencias LATAM investigadas para ti</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calculator Grid -->
+    <div class="calc-grid">
+
+      <!-- LEFT: Inputs -->
+      <div class="calc-inputs-panel">
+        <h3 class="calc-panel-title" data-i18n="calc_panel_t">🎛️ Configura tu negocio</h3>
+
+        <!-- Location tier -->
+        <div class="calc-field">
+          <label class="calc-label" data-i18n="calc_tier_label">Tipo de local</label>
+          <div class="calc-seg" id="cTier">
+            <button class="calc-seg-btn active" data-val="kiosk" onclick="setTier(this)" data-i18n="calc_tier_kiosk">Kiosco Express<br><small>15–25 m²</small></button>
+            <button class="calc-seg-btn" data-val="studio" onclick="setTier(this)" data-i18n="calc_tier_studio">Estudio<br><small>25–40 m²</small></button>
+            <button class="calc-seg-btn" data-val="salon" onclick="setTier(this)" data-i18n="calc_tier_salon">Salón completo<br><small>40–70 m²</small></button>
+          </div>
+        </div>
+
+        <!-- Customers per day -->
+        <div class="calc-field">
+          <div class="calc-label-row">
+            <label class="calc-label" data-i18n="calc_clients_l">Clientas por día</label>
+            <span class="calc-val-badge" id="vClients">6</span>
+          </div>
+          <input type="range" class="calc-slider" id="sClients" min="2" max="20" value="6" step="1" oninput="syncSlider('Clients',this.value);runCalc()">
+          <div class="calc-slider-ends"><span>2</span><span>20</span></div>
+        </div>
+
+        <!-- Avg ticket -->
+        <div class="calc-field">
+          <div class="calc-label-row">
+            <label class="calc-label" data-i18n="calc_ticket_l">Precio promedio por servicio</label>
+            <span class="calc-val-badge" id="vTicket">$380 MXN</span>
+          </div>
+          <input type="range" class="calc-slider" id="sTicket" min="150" max="900" value="380" step="10" oninput="syncSlider('Ticket',this.value,'$',' MXN');runCalc()">
+          <div class="calc-slider-ends"><span>$150</span><span>$900</span></div>
+        </div>
+
+        <!-- Working days -->
+        <div class="calc-field">
+          <div class="calc-label-row">
+            <label class="calc-label" data-i18n="calc_days_l">Días trabajados al mes</label>
+            <span class="calc-val-badge" id="vDays">24</span>
+          </div>
+          <input type="range" class="calc-slider" id="sDays" min="15" max="30" value="24" step="1" oninput="syncSlider('Days',this.value);runCalc()">
+          <div class="calc-slider-ends"><span>15</span><span>30</span></div>
+        </div>
+
+        <!-- Divider -->
+        <div class="calc-divider"></div>
+
+        <!-- Rent -->
+        <div class="calc-field">
+          <div class="calc-label-row">
+            <label class="calc-label" data-i18n="calc_rent_l">Renta mensual del local</label>
+            <span class="calc-val-badge" id="vRent">$9,000 MXN</span>
+          </div>
+          <input type="range" class="calc-slider" id="sRent" min="2000" max="40000" value="9000" step="500" oninput="syncSlider('Rent',this.value,'$',' MXN');runCalc()">
+          <div class="calc-slider-ends"><span>$2,000</span><span>$40,000</span></div>
+        </div>
+
+        <!-- Staff -->
+        <div class="calc-field">
+          <div class="calc-label-row">
+            <label class="calc-label" data-i18n="calc_staff_l">Número de técnicas (además de ti)</label>
+            <span class="calc-val-badge" id="vStaff">1</span>
+          </div>
+          <input type="range" class="calc-slider" id="sStaff" min="0" max="5" value="1" step="1" oninput="syncSlider('Staff',this.value);runCalc()">
+          <div class="calc-slider-ends"><span data-i18n="calc_staff_min">Solo yo</span><span data-i18n="calc_staff_max">5 técnicas</span></div>
+        </div>
+
+        <!-- Staff salary -->
+        <div class="calc-field" id="staffSalaryField">
+          <div class="calc-label-row">
+            <label class="calc-label" data-i18n="calc_salary_l">Sueldo por técnica / mes</label>
+            <span class="calc-val-badge" id="vSalary">$9,000 MXN</span>
+          </div>
+          <input type="range" class="calc-slider" id="sSalary" min="5000" max="18000" value="9000" step="500" oninput="syncSlider('Salary',this.value,'$',' MXN');runCalc()">
+          <div class="calc-slider-ends"><span>$5,000</span><span>$18,000</span></div>
+        </div>
+
+        <!-- Overhead -->
+        <div class="calc-field">
+          <div class="calc-label-row">
+            <label class="calc-label" data-i18n="calc_overhead_l">Gastos fijos adicionales (luz, agua, internet…)</label>
+            <span class="calc-val-badge" id="vOverhead">$3,500 MXN</span>
+          </div>
+          <input type="range" class="calc-slider" id="sOverhead" min="1000" max="12000" value="3500" step="250" oninput="syncSlider('Overhead',this.value,'$',' MXN');runCalc()">
+          <div class="calc-slider-ends"><span>$1,000</span><span>$12,000</span></div>
+        </div>
+
+        <!-- Primavera toggle -->
+        <div class="calc-toggle-wrap">
+          <label class="calc-toggle-label">
+            <input type="checkbox" id="primaveraToggle" checked onchange="runCalc()">
+            <span class="calc-toggle-slider"></span>
+          </label>
+          <div>
+            <strong data-i18n="calc_toggle_t">Precio Primavera (12% del ingreso)</strong>
+            <span style="font-size:.8rem;color:var(--muted);display:block;" data-i18n="calc_toggle_s">Desactiva para ver con proveedor genérico (22%)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Results -->
+      <div class="calc-results-panel">
+
+        <!-- Revenue big number -->
+        <div class="calc-result-hero">
+          <div class="calc-result-label" data-i18n="calc_rev_label">Ingreso mensual estimado</div>
+          <div class="calc-result-revenue" id="rRevenue">$0</div>
+          <div class="calc-result-sub" id="rRevenueSub">— MXN al mes</div>
+        </div>
+
+        <!-- Profit highlight -->
+        <div class="calc-profit-box" id="profitBox">
+          <div class="calc-profit-left">
+            <div class="calc-profit-label" data-i18n="calc_profit_label">Ganancia neta mensual</div>
+            <div class="calc-profit-num" id="rProfit">$0</div>
+          </div>
+          <div class="calc-profit-right">
+            <div class="calc-profit-label" data-i18n="calc_margin_label">Margen</div>
+            <div class="calc-profit-pct" id="rMargin">0%</div>
+          </div>
+          <div class="calc-profit-right">
+            <div class="calc-profit-label" data-i18n="calc_annual_label">Anual estimado</div>
+            <div class="calc-profit-annual" id="rAnnual">$0</div>
+          </div>
+        </div>
+
+        <!-- Cost breakdown donut -->
+        <div class="calc-chart-wrap">
+          <canvas id="calcDonut" height="220"></canvas>
+        </div>
+
+        <!-- Cost breakdown table -->
+        <table class="calc-table">
+          <thead><tr><th data-i18n="calc_th_item">Concepto</th><th data-i18n="calc_th_monthly">Mensual</th><th data-i18n="calc_th_pct">% del ingreso</th></tr></thead>
+          <tbody>
+            <tr><td data-i18n="calc_row_prod">💅 Costo de productos</td><td id="rProducts">—</td><td id="rProductsPct">—</td></tr>
+            <tr><td data-i18n="calc_row_rent">🏷️ Renta del local</td><td id="rRent">—</td><td id="rRentPct">—</td></tr>
+            <tr><td data-i18n="calc_row_labor">👩 Nómina (técnicas)</td><td id="rLabor">—</td><td id="rLaborPct">—</td></tr>
+            <tr><td data-i18n="calc_row_overhead">🔌 Gastos generales</td><td id="rOverhead">—</td><td id="rOverheadPct">—</td></tr>
+            <tr><td data-i18n="calc_row_royalty">🤝 Royalty Primavera (6%)</td><td id="rRoyalty">—</td><td id="rRoyaltyPct">—</td></tr>
+            <tr class="calc-table-total"><td><strong data-i18n="calc_row_net">✅ Ganancia neta</strong></td><td id="rNetTotal">—</td><td id="rNetPct">—</td></tr>
+          </tbody>
+        </table>
+
+        <!-- Primavera savings callout -->
+        <div class="calc-savings-box" id="calcSavingsBox">
+          <div class="calc-savings-icon">🌸</div>
+          <div>
+            <strong class="calc-savings-title" data-i18n="calc_sav_title">Ventaja Primavera este mes</strong>
+            <p class="calc-savings-desc" data-i18n="calc_sav_desc">Con nuestro precio de fábrica directa ahorras <strong id="rSavings" style="color:var(--rose-d);">$0</strong> MXN al mes en productos vs. proveedor genérico — eso es <strong id="rSavingsAnnual" style="color:var(--rose-d);">$0</strong> MXN al año que se quedan en tu bolsillo.</p>
+            <p class="calc-savings-desc" data-i18n="calc_sav_desc2" style="margin-top:.4rem;">Además: <em>marketing incluido, colecciones nuevas cada temporada, capacitación continua, y una marca que crece contigo.</em></p>
+          </div>
+        </div>
+
+        <!-- Payback estimate -->
+        <div class="calc-payback" id="calcPayback">
+          <span class="calc-payback-icon">📅</span>
+          <div>
+            <span class="calc-payback-label" data-i18n="calc_payback_l">Recuperación estimada de inversión</span>
+            <span class="calc-payback-val" id="rPayback">— meses</span>
+          </div>
+          <div>
+            <span class="calc-payback-label" data-i18n="calc_invest_l">Inversión inicial estimada</span>
+            <span class="calc-payback-inv" id="rInvestment">—</span>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /calc-grid -->
+
+    <!-- CTA inside calculator -->
+    <div style="text-align:center;margin-top:3rem;">
+      <p style="color:var(--muted);font-size:.95rem;margin-bottom:1.25rem;" data-i18n="calc_cta_p">¿Estas cifras te emocionan? Da el siguiente paso y habla con nuestro equipo.</p>
+      <a href="mailto:gary@garymakesart.com?subject=Interés en franquicia Primavera" class="btn btn--rose" data-i18n="calc_cta_btn">Quiero ser franquiciada Primavera 🌸</a>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════ CALCULATOR CSS ══════ -->
+<style>
+/* Advantage banner */
+.calc-adv-banner{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:3rem;}
+@media(max-width:768px){.calc-adv-banner{grid-template-columns:1fr;}}
+.calc-adv-item{background:#fff;border-left:4px solid var(--rose);border-radius:12px;padding:1.1rem 1.25rem;display:flex;align-items:flex-start;gap:.9rem;box-shadow:var(--sh);}
+.calc-adv-icon{font-size:1.8rem;flex-shrink:0;margin-top:.1rem;}
+.calc-adv-item strong{display:block;font-size:.9rem;color:var(--dark);margin-bottom:.2rem;}
+.calc-adv-item span{font-size:.8rem;color:var(--muted);line-height:1.5;}
+
+/* Main grid */
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;}
+@media(max-width:900px){.calc-grid{grid-template-columns:1fr;}}
+
+/* Input panel */
+.calc-inputs-panel{background:#fff;border-radius:var(--r);padding:2rem;box-shadow:var(--sh);}
+.calc-panel-title{font-family:var(--serif);font-size:1.2rem;color:var(--dark);margin:0 0 1.5rem;}
+.calc-field{margin-bottom:1.4rem;}
+.calc-label{font-size:.85rem;font-weight:600;color:var(--dark);}
+.calc-label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;}
+.calc-val-badge{background:var(--rose);color:#fff;font-size:.78rem;font-weight:700;padding:.2rem .7rem;border-radius:20px;min-width:80px;text-align:center;}
+.calc-slider{width:100%;accent-color:var(--rose);height:5px;cursor:pointer;margin:.2rem 0;}
+.calc-slider-ends{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);}
+.calc-divider{border:none;border-top:1px dashed var(--border);margin:1.2rem 0;}
+
+/* Segmented control */
+.calc-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin-top:.5rem;}
+.calc-seg-btn{background:var(--bg-soft);border:1.5px solid var(--border);border-radius:10px;padding:.6rem .4rem;font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer;text-align:center;transition:all .18s;line-height:1.3;}
+.calc-seg-btn small{font-weight:400;color:var(--muted);font-size:.72rem;}
+.calc-seg-btn.active{background:var(--rose);border-color:var(--rose);color:#fff;}
+.calc-seg-btn.active small{color:rgba(255,255,255,.8);}
+.calc-seg-btn:hover:not(.active){border-color:var(--rose-mid);background:#FFF6F2;}
+
+/* Toggle switch */
+.calc-toggle-wrap{display:flex;align-items:center;gap:.9rem;background:var(--bg-soft);border:1.5px solid var(--border);border-radius:12px;padding:.9rem 1rem;margin-top:.5rem;}
+.calc-toggle-label{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0;}
+.calc-toggle-label input{opacity:0;width:0;height:0;}
+.calc-toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:26px;cursor:pointer;transition:.3s;}
+.calc-toggle-slider::before{content:'';position:absolute;width:20px;height:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;}
+input:checked+.calc-toggle-slider{background:var(--rose);}
+input:checked+.calc-toggle-slider::before{transform:translateX(20px);}
+
+/* Results panel */
+.calc-results-panel{display:flex;flex-direction:column;gap:1.25rem;}
+
+.calc-result-hero{background:linear-gradient(135deg,var(--rose-d) 0%,var(--rose) 60%,#E8956A 100%);border-radius:var(--r);padding:2rem;text-align:center;color:#fff;}
+.calc-result-label{font-size:.82rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;opacity:.85;margin-bottom:.5rem;}
+.calc-result-revenue{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.2rem);font-weight:400;margin-bottom:.25rem;}
+.calc-result-sub{font-size:.9rem;opacity:.8;}
+
+.calc-profit-box{background:#fff;border-radius:var(--r);padding:1.5rem 1.75rem;box-shadow:var(--sh);display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:1rem;align-items:center;}
+.calc-profit-label{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;}
+.calc-profit-num{font-family:var(--serif);font-size:1.9rem;color:var(--dark);}
+.calc-profit-pct{font-size:1.5rem;font-weight:700;color:var(--rose);}
+.calc-profit-annual{font-size:1rem;font-weight:700;color:var(--dark);}
+
+.calc-chart-wrap{background:#fff;border-radius:var(--r);padding:1.25rem;box-shadow:var(--sh);display:flex;justify-content:center;}
+
+.calc-table{width:100%;border-collapse:collapse;background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);font-size:.87rem;}
+.calc-table th{background:var(--dark);color:#fff;padding:.65rem 1rem;text-align:left;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;}
+.calc-table td{padding:.6rem 1rem;border-bottom:1px solid var(--border);color:var(--text);}
+.calc-table td:nth-child(2),.calc-table td:nth-child(3){text-align:right;font-weight:600;}
+.calc-table-total td{background:var(--bg-soft);font-weight:700;color:var(--dark);border-bottom:none;}
+
+.calc-savings-box{background:linear-gradient(135deg,#FFF3EE 0%,#FFF8F5 100%);border:1.5px solid var(--rose-l);border-radius:var(--r);padding:1.4rem 1.5rem;display:flex;gap:1rem;align-items:flex-start;}
+.calc-savings-icon{font-size:2rem;flex-shrink:0;}
+.calc-savings-title{display:block;font-size:.95rem;font-weight:700;color:var(--dark);margin-bottom:.4rem;}
+.calc-savings-desc{font-size:.85rem;color:var(--text);line-height:1.6;margin:0;}
+
+.calc-payback{background:#fff;border-radius:var(--r);padding:1.25rem 1.5rem;box-shadow:var(--sh);display:grid;grid-template-columns:auto 1fr 1fr;gap:1rem;align-items:center;}
+.calc-payback-icon{font-size:1.8rem;}
+.calc-payback-label{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:.2rem;}
+.calc-payback-val{font-size:1.3rem;font-weight:700;color:var(--rose-d);display:block;}
+.calc-payback-inv{font-size:1rem;font-weight:700;color:var(--dark);display:block;}
+
+/* CTA button */
+.btn--rose{display:inline-block;background:linear-gradient(135deg,var(--rose-d),var(--rose));color:#fff;padding:1rem 2.5rem;border-radius:50px;font-weight:700;font-size:1rem;text-decoration:none;box-shadow:0 4px 18px rgba(207,123,96,.35);transition:all .2s;}
+.btn--rose:hover{transform:translateY(-2px);box-shadow:0 7px 24px rgba(207,123,96,.45);}
+
+@media(max-width:600px){
+  .calc-profit-box{grid-template-columns:1fr 1fr;}.calc-profit-left{grid-column:1/-1;}
+  .calc-payback{grid-template-columns:auto 1fr;}
+}
+</style>
+
+<!-- ══════ CALCULATOR JS ══════ -->
+<script>
+(function(){
+  // Tier presets: [rent, overhead]
+  const TIER = {
+    kiosk:  [7000,  2500],
+    studio: [12000, 4000],
+    salon:  [22000, 6500],
+  };
+  let donutChart = null;
+  let currentTier = 'kiosk';
+
+  function mxn(n){ return '$' + Math.round(n).toLocaleString('es-MX') + ' MXN'; }
+  function pct(n,total){ return total>0 ? (n/total*100).toFixed(1)+'%' : '0%'; }
+
+  window.setTier = function(btn){
+    document.querySelectorAll('.calc-seg-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTier = btn.dataset.val;
+    const [rent, overhead] = TIER[currentTier];
+    // Update sliders
+    const sRent = document.getElementById('sRent');
+    const sOverhead = document.getElementById('sOverhead');
+    sRent.value = rent;
+    sOverhead.value = overhead;
+    syncSlider('Rent', rent, '$', ' MXN');
+    syncSlider('Overhead', overhead, '$', ' MXN');
+    runCalc();
+  };
+
+  window.syncSlider = function(id, val, pre, suf){
+    pre = pre || ''; suf = suf || '';
+    const badge = document.getElementById('v'+id);
+    if(badge) badge.textContent = pre + Number(val).toLocaleString('es-MX') + suf;
+  };
+
+  window.runCalc = function(){
+    const clients  = +document.getElementById('sClients').value;
+    const ticket   = +document.getElementById('sTicket').value;
+    const days     = +document.getElementById('sDays').value;
+    const rent     = +document.getElementById('sRent').value;
+    const staff    = +document.getElementById('sStaff').value;
+    const salary   = +document.getElementById('sSalary').value;
+    const overhead = +document.getElementById('sOverhead').value;
+    const isPrimavera = document.getElementById('primaveraToggle').checked;
+
+    // Show/hide salary field
+    document.getElementById('staffSalaryField').style.display = staff===0 ? 'none' : 'block';
+
+    const revenue    = clients * ticket * days;
+    const prodPct    = isPrimavera ? 0.12 : 0.22;
+    const prodCost   = revenue * prodPct;
+    const laborCost  = staff * salary;
+    const royalty    = isPrimavera ? revenue * 0.06 : 0;
+    const totalCost  = prodCost + rent + laborCost + overhead + royalty;
+    const profit     = revenue - totalCost;
+    const margin     = revenue > 0 ? (profit / revenue * 100) : 0;
+
+    // Savings vs generic
+    const genericProd = revenue * 0.22;
+    const savings     = isPrimavera ? (genericProd - prodCost) : 0;
+
+    // Investment estimate by tier
+    const investMap = { kiosk: 380000, studio: 580000, salon: 850000 };
+    const invest = investMap[currentTier] || 400000;
+    const paybackMonths = profit > 0 ? Math.ceil(invest / profit) : '∞';
+
+    // Update DOM
+    document.getElementById('rRevenue').textContent    = mxn(revenue);
+    const revD = T[currentLang]||T['es'];
+    document.getElementById('rRevenueSub').textContent = Math.round(revenue).toLocaleString('es-MX') + ' ' + (revD.calc_rev_sub_unit||'MXN/mes') + ' · ' + mxn(revenue*12) + '/año';
+    document.getElementById('rProfit').textContent     = mxn(profit);
+    document.getElementById('rMargin').textContent     = margin.toFixed(1) + '%';
+    document.getElementById('rAnnual').textContent     = mxn(profit * 12);
+
+    // Colour profit box
+    const pb = document.getElementById('profitBox');
+    pb.style.background = profit >= 0 ? '#fff' : '#FFF0F0';
+    document.getElementById('rProfit').style.color = profit >= 0 ? 'var(--dark)' : '#DC2626';
+
+    // Table
+    document.getElementById('rProducts').textContent    = mxn(prodCost);
+    document.getElementById('rProductsPct').textContent = pct(prodCost, revenue);
+    document.getElementById('rRent').textContent        = mxn(rent);
+    document.getElementById('rRentPct').textContent     = pct(rent, revenue);
+    document.getElementById('rLabor').textContent       = mxn(laborCost);
+    document.getElementById('rLaborPct').textContent    = pct(laborCost, revenue);
+    document.getElementById('rOverhead').textContent    = mxn(overhead);
+    document.getElementById('rOverheadPct').textContent = pct(overhead, revenue);
+    document.getElementById('rRoyalty').textContent     = mxn(royalty);
+    document.getElementById('rRoyaltyPct').textContent  = pct(royalty, revenue);
+    document.getElementById('rNetTotal').textContent    = mxn(profit);
+    document.getElementById('rNetPct').textContent      = margin.toFixed(1) + '%';
+
+    // Savings
+    document.getElementById('rSavings').textContent       = Math.round(savings).toLocaleString('es-MX');
+    document.getElementById('rSavingsAnnual').textContent = Math.round(savings*12).toLocaleString('es-MX');
+
+    // Payback
+    const pbD = T[currentLang]||T['es'];
+    document.getElementById('rPayback').textContent    = profit > 0 ? paybackMonths + (pbD.calc_months||' meses') : (pbD.calc_adjust||'Ajusta los números');
+    document.getElementById('rInvestment').textContent = mxn(invest);
+
+    // Donut chart
+    const rose = '#CF7B60', roseD = '#A05038', sage = '#8B9D89', muted = '#C0B0A8', green = '#16A34A';
+    const data  = [prodCost, rent, laborCost, overhead, royalty, Math.max(0,profit)];
+    const d = T[currentLang] || T['es'];
+    const labels= [d.calc_chart_prod||'Prod.',d.calc_chart_rent||'Rent',d.calc_chart_labor||'Labor',d.calc_chart_overhead||'Overhead',d.calc_chart_royalty||'Royalty',d.calc_chart_profit||'Profit'];
+    const colors= [rose, roseD, sage, muted, '#D4A5A5', green];
+
+    if(donutChart){ donutChart.destroy(); }
+    const ctx = document.getElementById('calcDonut').getContext('2d');
+    donutChart = new Chart(ctx, {
+      type:'doughnut',
+      data:{
+        labels,
+        datasets:[{ data, backgroundColor:colors, borderWidth:2, borderColor:'#fff', hoverOffset:6 }]
+      },
+      options:{
+        responsive:true,
+        cutout:'65%',
+        plugins:{
+          legend:{ position:'right', labels:{ color:'#2A1E1A', font:{size:11}, padding:10, boxWidth:12 } },
+          tooltip:{
+            callbacks:{
+              label: ctx => ' ' + ctx.label + ': ' + mxn(ctx.raw) + ' (' + (revenue>0?(ctx.raw/revenue*100).toFixed(1):'0') + '%)'
+            }
+          }
+        }
+      }
+    });
+  };
+
+  // Init on load
+  document.addEventListener('DOMContentLoaded', function(){
+    syncSlider('Clients','6');
+    syncSlider('Ticket','380','$',' MXN');
+    syncSlider('Days','24');
+    syncSlider('Rent','9000','$',' MXN');
+    syncSlider('Staff','1');
+    syncSlider('Salary','9000','$',' MXN');
+    syncSlider('Overhead','3500','$',' MXN');
+    setLang('en');
+    runCalc();
+  });
+  // Also run immediately in case DOM already ready
+  if(document.readyState !== 'loading') {
+    setTimeout(()=>{
+      syncSlider('Clients','6');
+      syncSlider('Ticket','380','$',' MXN');
+      syncSlider('Days','24');
+      syncSlider('Rent','9000','$',' MXN');
+      syncSlider('Staff','1');
+      syncSlider('Salary','9000','$',' MXN');
+      syncSlider('Overhead','3500','$',' MXN');
+      runCalc();
+    },100);
+  }
+})();
+</script>
+
+
+
+
+<!-- FOOTER -->
+<footer style="background:#1A1210;padding:2rem;text-align:center;">
+  <p style="color:rgba(255,255,255,.35);font-size:.82rem;">© 2025 Primavera Beauty Co. — <a href="Primavera_Report.html" style="color:var(--rose);text-decoration:none;">Back to Full Report</a></p>
+</footer>
+
+<script>
+// Translation system (minimal — only calc keys needed)
+const T = {
+en:{
+  nav_market:"Market",nav_countries:"Countries",nav_franchise:"Franchise",
+    nav_startup:"📋 Startup Guide",nav_tech:"Technology",nav_swot:"SWOT",nav_regs:"Regulations",nav_fin:"Financials",
+  hero_tag:"Business Intelligence Report · April 2026",hero_title:"LATAM Nail Salon<br>Franchise Report",hero_sub:"Market Analysis · Strategy · Opportunity · Regulations",hero_btn1:"Explore the Market ↓",hero_btn2:"View SWOT Analysis",hero_scroll:"Scroll to explore",
+  sum_tag:"Executive Summary",sum_title:"The Opportunity in Numbers",sum_desc:"The LATAM nail salon industry is one of the fastest-growing beauty segments globally, driven by urbanization, rising disposable incomes, and an expanding female workforce.",
+  m1:"LATAM Market 2023",m2:"Annual CAGR 2024–2030",m3:"Projected Market 2030",m4:"Max Franchise Margins",m5:"Global Market Share",m6:"Colors in Our Portfolio",
+  mkt_tag:"LATAM Market Overview",mkt_title:"A Market on the Rise",mkt_desc:"Latin America accounts for 11.2% of the global nail salon market — growing at nearly double the global average, with Brazil and Mexico leading expansion.",
+  ch1_title:"Market Size by Country (2023, USD M)",ch2_title:"LATAM Growth Forecast (USD Billion)",
+  drv_tag:"Growth Driver",drv1_h:"Urbanization",drv1_p:"Rapid urban population growth in Brazil, Mexico and Colombia drives foot traffic to beauty services.",drv2_h:"Rising Incomes",drv2_p:"Expanding middle class across LATAM with increasing discretionary spending on personal care.",drv3_h:"UV Gel Boom",drv3_p:"UV Gel Overlays are the fastest-growing service segment — precisely our core product offering.",drv4_h:"Female Workforce",drv4_p:"Record female workforce participation across LATAM drives demand for professional nail care.",
+  cty_tag:"Country Analysis",cty_title:"Key LATAM Markets",cty_desc:"Four priority markets, each with distinct dynamics, regulatory frameworks, and entry opportunities.",
+  tab_mx:"🇲🇽 Mexico",tab_br:"🇧🇷 Brazil",tab_ar:"🇦🇷 Argentina",tab_cl:"🇨🇱 Chile",
+  cs_mktsize:"Market Size 2023",cs_share:"LATAM Share",cs_cagr:"Projected CAGR",cs_pop:"Population",cs_reg:"Regulator",cs_entry:"Entry Difficulty",
+  mx_h:"Mexico — Priority Entry Market",mx_why:"Why Mexico First?",mx_p1:"Mexico is our beachhead market. Proximity to our Chinese supply chain, a large urban middle class, and a thriving beauty culture make it ideal for the first franchise rollout.",mx_p2:"Mexico City, Guadalajara and Monterrey are top-tier nail salon markets with strong demand for premium gel services. The \"Primavera\" brand name resonates naturally in Spanish.",mx_p3:"COFEPRIS does not require pre-market registration — only a Notice of Operation, making import faster than Brazil or Argentina.",
+  br_h:"Brazil — Highest Growth",br_why:"Brazil Market Highlights",br_p1:"Brazil is the largest nail salon market in LATAM and registers the highest CAGR in the region. Brazilians are among the world's highest per-capita spenders on beauty services.",br_p2:"São Paulo, Rio de Janeiro and Belo Horizonte offer massive franchise opportunities. The market favors premium, eco-conscious brands — aligning perfectly with Primavera's bio-based product line.",br_p3:"ANVISA classifies nail polish as Grade I (notification-only). RDC 907/2024 governs all cosmetics. Portuguese labeling and INCI nomenclature are mandatory.",
+  ar_h:"Argentina — Emerging Opportunity",ar_why:"Argentina Market Highlights",ar_p1:"Argentina has a vibrant beauty culture centered in Buenos Aires. The market is price-sensitive due to economic volatility, but consumers remain loyal to premium salon experiences.",ar_p2:"ANMAT updated regulations in 2024–2025: Disposición 8067/2024 aligns with MERCOSUR standards, and Disposición 4033/2025 eliminated import pre-approval for cosmetics.",ar_p3:"Currency risk is the primary challenge. A franchise model with local pricing flexibility is essential for sustainable operations.",
+  cl_h:"Chile — Premium Market",cl_why:"Chile Market Highlights",cl_p1:"Chile has the highest GDP per capita in LATAM and a stable, transparent regulatory environment. Santiago's affluent consumer base shows strong appetite for premium salon experiences.",cl_p2:"ISP/ANAMED classifies nail enamel as a Low Risk Cosmetic — the lightest regulatory burden of all four target markets. This makes Chile an attractive secondary launch market after Mexico.",cl_p3:"The eco-luxury positioning of Primavera's plant-based line aligns well with Chilean consumers' growing environmental consciousness.",
+  fr_tag:"Franchise Models",fr_title:"Existing Franchise Landscape",fr_desc:"Understanding the competitive landscape helps position Primavera's unique advantage: factory-direct pricing, FDA-approved products, and a 1,500+ color range.",
+  ft_brand:"Brand",ft_origin:"Origin",ft_invest:"Investment Range",ft_seg:"Segment",ft_latam:"LATAM Presence",ft_model:"Model",ft_m1:"Full franchise",ft_m2:"Franchise + Corp",ft_m3:"Franchise (retail)",ft_m4:"Kiosk franchise",ft_m5:"Subscription model",ft_m6:"Factory-direct franchise",
+  adv_tag:"Primavera Advantage",adv1_h:"Factory-Direct Cost Edge",adv1_p:"Direct access to Guangzhou factory eliminates middlemen, delivering 30–50% lower product costs vs. competitors who source through distributors.",adv2_h:"Untapped Market Window",adv2_p:"Most established chains have minimal LATAM presence. Primavera can capture first-mover advantage in Mexico, Chile and secondary Brazilian cities.",adv3_h:"Natural Brand Resonance",adv3_p:"\"Primavera\" (Spring) naturally conveys freshness and nature in Spanish and Portuguese — a built-in brand equity advantage in the target markets.",
+  tech_tag:"Product Technology",tech_title:"Nail Polish Innovation",tech_desc:"Understanding the product technology is key to salon service design, pricing strategy, and supply chain sourcing. We offer all three major systems.",
+  t1_h:"Traditional 3-Step Gel System",t1_s1h:"Base Coat",t1_s1p:"Primes the nail, improves adhesion and protects the nail plate from staining.",t1_s2h:"Color Gel (×2 layers)",t1_s2p:"UV/LED-cured pigmented gel applied in two thin coats. Each layer cures 30–60 sec.",t1_s3h:"Top Coat / Sealant",t1_s3p:"Seals the color, adds gloss and durability. Final UV/LED cure of 60 sec.",t1_dur:"⏱ Lasts 2–3 weeks · Requires UV/LED lamp · Industry standard",t1_badge:"Gold Standard · High Durability",
+  t2_h:"All-in-One Gel System",t2_s1h:"Single-Bottle Application",t2_s1p:"Base coat + color + top coat combined in one formula. No separate layers needed.",t2_s2h:"UV/LED Cure (or Sunlight)",t2_s2p:"Some formulas (e.g. Bio Seaweed Unity) cure in direct sunlight — no lamp required.",t2_s3h:"No Sticky Layer",t2_s3p:"Advanced formulas leave no tacky inhibition layer, eliminating the need for isopropyl alcohol wipe.",t2_dur:"⏱ 15–20 min service · Lasts 1–2 weeks · 40% faster",t2_badge:"Time-Saver · Express Services",
+  t3_h:"Plant-Based & Bio-Based",t3_s1h:"Bio-Sourced Polymers",t3_s1p:"Derived from plant oils (soybean, castor), citric acid, and cassava starch — up to 84% bio-sourced.",t3_s2h:"25-Free Formulation",t3_s2p:"Free from 25+ toxic chemicals including formaldehyde, toluene, DBP, camphor, and TPHP.",t3_s3h:"Breathable Formula",t3_s3p:"Allows water and oxygen through the coating — healthier for nail bed integrity.",t3_dur:"🌎 Vegan · Cruelty-free · Eco-conscious consumers",t3_badge:"Future Growth · Eco Premium",
+  prod_tag:"Our Factory · Guangzhou, China",prod_title:"Factory-Direct Product Portfolio",prod_desc:"Direct access to an FDA-approved nail polish factory in Guangzhou — the world's leading nail care manufacturing hub. Bulk ordering, custom labeling, and export-ready packaging.",
+  pf1:"Guangzhou Factory",pf2:"FDA Approved Products",pf3:"Colors Available",pf4:"Bulk Order Pricing",
+  col1_h:"Collection 1: Opaque & Cream Series",col1_p:"500+ rich, opaque colors — reds, nudes, pastels, brights, and deep tones. High-pigment, single-coat coverage.",col2_h:"Collection 2: H-Series · Jelly & Transparent (1,045 colors)",col2_p:"1,045-color semi-transparent jelly and glass-finish gel polish. Perfect for layering, gradient, and Korea-style nail art.",col2_note:"Showing representative colors — full H0001–H1045 catalog available on request",
+  sc_title:"Supply Chain: China → LATAM",sc1_h:"Guangzhou Factory",sc1_p:"FDA-approved production",sc2_h:"Quality Control",sc2_p:"Lab testing + certification",sc3_h:"Bulk Export",sc3_p:"Custom Primavera labeling",sc4_h:"Import to Mexico",sc4_p:"COFEPRIS compliant",sc5_h:"Franchise Salons",sc5_p:"LATAM distribution",
+  swot_tag:"Strategic Analysis",swot_title:"SWOT Analysis",swot_desc:"A comprehensive assessment of Primavera's position in the LATAM nail salon franchise market.",sw_s:"Strengths",sw_s_h:"Internal Advantages",sw_w:"Weaknesses",sw_w_h:"Internal Challenges",sw_o:"Opportunities",sw_o_h:"Market Opportunities",sw_t:"Threats",sw_t_h:"External Risks",
+  ss1:"Direct access to FDA-approved Guangzhou factory",ss2:"30–50% lower product costs vs. distributors",ss3:"1,500+ color portfolio — widest in class",ss4:"\"Primavera\" brand name resonates in Spanish & Portuguese",ss5:"All three nail systems: traditional, all-in-one, bio-based",ss6:"Proven franchise model framework from global comps",
+  sw1:"New brand — no established LATAM recognition yet",sw2:"Multi-country regulatory compliance complexity",sw3:"High upfront franchise investment ($120K–$280K)",sw4:"Supply chain dependence on single Chinese factory",sw5:"Language and cultural localization requirements",sw6:"Currency risk across multiple LATAM markets",
+  so1:"LATAM market growing at 8.6% CAGR through 2030",so2:"UV Gel is the fastest-growing service category",so3:"Most global chains have minimal LATAM presence",so4:"Rising eco-consciousness fuels plant-based demand",so5:"Brazil: highest regional CAGR (~10%), underserved cities",so6:"Argentina's 2025 import deregulation reduces barriers",
+  st1:"Established local salon chains with loyal customer bases",st2:"Argentina currency volatility and economic instability",st3:"Regulatory changes in COFEPRIS / ANVISA / ANMAT",st4:"Low-cost local nail polish brands undercutting retail",st5:"Global franchises (NBAR, MiniLuxe) expanding into LATAM",st6:"China supply chain disruption risk (geopolitics, logistics)",
+  reg_tag:"Regulatory Framework",reg_title:"Compliance by Country",reg_desc:"Each LATAM market has a distinct regulatory body and process for importing and selling nail cosmetics. Here's what you need to know.",
+  mx_r1:"No pre-market registration required for nail cosmetics — significantly faster market entry.",mx_r2:"Notice of Operation submitted online via DIGIPRIS platform prior to commercialization.",mx_r3:"Local Mexican representative (natural or legal person) required — assumes regulatory responsibility.",mx_r4:"Spanish labeling mandatory: product name, manufacturer, ingredients, instructions, warnings.",mx_r5:"Prohibited substances: lead, mercury, certain parabens. Our FDA-approved formulas comply.",mx_r6:"<strong>Difficulty: Medium</strong> — straightforward for FDA-certified products with local rep.",
+  br_r1:"Nail polish classified as <strong>Grade I</strong> (low risk) — notification-only, not full registration. ~97% of cosmetics follow this route.",br_r2:"Importer requires Authorization to Operate (ATO) per RDC 16/2014. Updated under RDC 907/2024.",br_r3:"Portuguese labeling mandatory. INCI nomenclature required for all ingredients.",br_r4:"Products must be free from harmful microorganisms. Safety data required.",br_r5:"2024 update (RDC 907) consolidated and simplified prior regulations — favorable for importers.",br_r6:"<strong>Difficulty: High</strong> — most complex LATAM market. Recommend Phase 2 entry (2027).",
+  ar_r1:"<strong>Disposición 4033/2025:</strong> Import pre-approval for cosmetics eliminated — major barrier removed as of 2025.",ar_r2:"MERCOSUR standards apply via Disposición 8067/2024 — regional harmonization ongoing.",ar_r3:"Must still comply with safety standards, labeling, and local health regulations.",ar_r4:"Spanish labeling required. INCI ingredients list mandatory.",ar_r5:"Main risk is currency volatility (ARS/USD), not regulatory compliance.",ar_r6:"<strong>Difficulty: Medium</strong> — simplified by 2025 deregulation. Phase 3 entry (2028).",
+  cl_r1:"Nail enamel classified as <strong>Low Risk Cosmetic</strong> — lightest regulatory burden in LATAM.",cl_r2:"ANAMED (under ISP) manages notification/registration process — streamlined for low-risk products.",cl_r3:"Spanish labeling required. Standard ingredient disclosure rules apply.",cl_r4:"Chile has multiple free trade agreements with China — favorable import tariff conditions.",cl_r5:"Stable, transparent regulatory environment — most predictable market for compliance planning.",cl_r6:"<strong>Difficulty: Low–Medium</strong> — recommended as secondary pilot alongside Mexico.",
+  fin_tag:"Financial Projections",fin_title:"Investment & Returns",fin_desc:"Conservative projections based on comparable LATAM franchise operations, adjusted for Mexico market conditions and factory-direct cost advantages.",
+  fi1_h:"Single Unit — Mexico City",fi_inv:"Initial Investment",fi_size:"Salon Size",fi_seats:"Service Stations",fi_rev:"Annual Revenue (Year 1)",fi_cogs:"Product Cost (COGS)",fi_labor:"Labor (60% commission model)",fi_rent:"Rent + Overheads",fi_margin:"<strong>Net Margin</strong>",
+  fi2_h:"5-Year Expansion Plan",fy1:"Year 1 — Mexico (1 unit)",fy2:"Year 2 — Mexico (3 units)",fy3:"Year 3 — MX + Chile (6 units)",fy4:"Year 4 — Brazil entry (10 units)",fy5:"Year 5 — 20+ LATAM units",fi_fran:"Franchise Fee (per unit)",fi_roy:"Royalty Rate",fi_break:"<strong>Break-Even</strong>",
+  ch3_title:"5-Year Revenue Projection by Country (USD M)",
+  str_tag:"Go-to-Market Strategy",str_title:"Mexico First — Then LATAM",str_desc:"A phased market entry strategy reduces risk while building brand equity and operational excellence before expanding to harder markets.",
+  ph1_tag:"Phase 1 · 2026",ph1_h:"Mexico Beachhead",ph1_p:"Launch flagship salon in Mexico City (Polanco or Santa Fe). Establish COFEPRIS compliance, local supply chain, and brand identity. Pilot the full 3-system service menu.",
+  ph2_tag:"Phase 2 · 2027",ph2_h:"Scale + Chile Entry",ph2_p:"Expand to 5–8 Mexico locations. Enter Chile (ISP low-risk pathway). Establish online retail of nail products alongside salon services.",
+  ph3_tag:"Phase 3 · 2027–28",ph3_h:"Brazil + Argentina",ph3_p:"Enter Brazil (São Paulo) after ANVISA compliance is secured. Argentina entry following currency stabilization and ANMAT notification process.",
+  ph4_tag:"Phase 4 · 2029–30",ph4_h:"LATAM Franchise Network",ph4_p:"20+ franchise units across 4 countries. Product line expansion into retail (pharmacies, e-commerce). Regional training academy established.",
+  tl_title:"Implementation Timeline",
+  tl1_d:"Q2 2026",tl1_h:"Legal Setup + COFEPRIS Registration",tl1_p:"Establish Mexican entity, designate local representative, file Notice of Operation. Secure first import shipment from Guangzhou.",
+  tl2_d:"Q3 2026",tl2_h:"Flagship Salon Launch — Mexico City",tl2_p:"Open first Primavera salon. Hire and train staff on all 3 nail systems. Launch brand social media presence in Spanish.",
+  tl3_d:"Q4 2026",tl3_h:"Franchise Model Formalization",tl3_p:"Document SOPs, training materials, product pricing. Sign first 2–3 franchise agreements. Chile regulatory filing begins.",
+  tl4_d:"Q1–Q2 2027",tl4_h:"Mexico Scale + Chile Launch",tl4_p:"5 Mexico locations operational. First Chile salon opens in Santiago. ANVISA Brazil notification process begins.",
+  tl5_d:"2028",tl5_h:"Brazil + Argentina Market Entry",tl5_p:"First Brazilian salon in São Paulo. Argentina pilot in Buenos Aires. Regional distribution hub established in Mexico.",
+  tl6_d:"2030",tl6_h:"20+ Locations · Full LATAM Network",tl6_p:"Primavera becomes a recognized premium nail salon brand across LATAM. Product line sold in retail and online. Franchise academy operational.",
+  cta_h:"Ready to Build the Future of Nails in LATAM?",cta_p:"Primavera combines factory-direct economics, a 1,500+ color portfolio, and a $2.4B market opportunity. The window is open — let's move.",cta_btn1:"Contact Us to Partner →",cta_btn2:"Back to Top ↑",
+  footer_copy:"© 2026 Primavera Nail Salon. Confidential Business Report. All data sourced from Grand View Research, IMARC Group, Technavio, and primary market research.",
+  tech_label:"Innovation",tech_h:"Nail Polish Technology",tech_sub:"Three product categories define today's professional nail market.",
+  tech1_badge:"Traditional",tech1_h:"3-Step UV/LED Gel System",tech1_p1:"The industry standard for the past decade. Base coat, color gel, and top coat — cured under UV or LED lamp. Delivers 2-4 weeks of chip-free wear.",
+  tech2_badge:"Recommended",tech2_h:"All-in-One Gel Polish",tech2_p1:"Next-generation single-bottle formula combining base, color and top in one. Reduces service time by 30-40% and lowers product cost per service.",
+  tech3_badge:"🌿 Eco Premium",tech3_h:"Plant-Based & Bio Formulas",tech3_p1:"Bio-sourced polymers form a flexible, breathable bond gentler on the nail plate — lasting <strong>3–5 weeks</strong>. Plant-based actives nourish the nail bed during wear, making nails <strong>stronger over time</strong>.",
+  spec_dur:"Durability",spec_time:"Application",spec_rem:"Removal",spec_margin:"Margin",
+  spec_dur1:"2-4 weeks",spec_time1:"45-60 min",spec_rem1:"Acetone soak",spec_margin1:"High",
+  spec_dur2:"3-5 weeks",spec_time2:"25-35 min",spec_rem2:"Peel or acetone",spec_margin2:"Very High",
+  spec_dur3:"1-2 weeks",spec_time3:"30-45 min",spec_rem3:"Water / peel",spec_margin3:"Premium+",
+  tech1_l1:"Proven professional formula",tech1_l2:"Wide color range availability",tech1_l3:"Dominant in Mexican and Brazilian salons",tech1_l4:"Requires trained nail technician",
+  tech2_l1:"Faster throughput = more clients per day",tech2_l2:"Lower SKU count simplifies inventory",tech2_l3:"Easier technician training",tech2_l4:"Primavera core product line from China factory",
+  tech3_l1:"Highest retail premium positioning",tech3_l2:"Safe for pregnant clients & children",tech3_l3:"Aligns with Primavera natural brand",tech3_l4:"Fastest-growing segment globally",
+  bio_tag:"Bio Advantage",bio_h:"Why Bio Polish Outperforms Standard Gel",bio_sub:"Our plant-based formulas aren't just eco-friendly — they're scientifically engineered to be more durable and actively protect your clients' nails.",bio_p1_h:"Superior Durability",bio_p1_t:"Bio-polymer chains are more flexible than acrylic gel — they bend with the nail instead of cracking. Result: 3–5 weeks of chip-free wear.",bio_p2_h:"Active Nail Protection",bio_p2_t:"Plant-derived oils nourish the nail bed during wear, making nails thicker and stronger over repeated applications.",bio_p3_h:"Zero Nail Damage",bio_p3_t:"No toluene, formaldehyde, or DBP. Safe for repeated applications without nail thinning.",bio_p4_h:"Premium Price Point",bio_p4_t:"Bio services command a 20–35% price premium. Higher ticket + healthier nails = loyal long-term clients.",bio_sci_h:"The Science Behind the Strength",bio_sci_t:"Primavera's bio-sourced formula uses plant-cellulose film formers and bio-derived monomers that cure into a breathable, flexible film — simultaneously gentler and more durable.",bio_stat1:"weeks wear time",bio_stat2:"toxic trio compounds",bio_stat3:"premium price vs standard",bio_stat4:"annual global growth",
+  cmp_attr:"Attribute",cmp_price:"Retail Price / Service",cmp_cogs:"Product Cost / Service",cmp_skus:"SKUs Required",cmp_lamp:"Equipment Needed",cmp_lamp1:"UV/LED lamp",cmp_lamp2:"LED lamp",cmp_lamp3:"None / LED",cmp_cert:"China Factory Cert",cmp_yes:"✓ Available",cmp_req:"Registration Req.",cmp_fast:"Fast-Track",cmp_mx:"Mexico COFEPRIS",
+  prod_label:"Supply Chain",prod_h:"Products & Factory Overview",prod_sub:"Our FDA-approved manufacturing partner in China produces across all three technology categories.",
+  factory_h:"Factory Credentials",fact1:"US FDA Registered",fact2:"ISO 22716 GMP",fact3:"Active SKUs",fact4:"300 units / SKU MOQ",
+  colors_h:"Signature Color Collections",colors_sub:"12ml bottles, available in opaque gel and jelly finish.",
+  col_opaque:"Opaque Collection — 24 Shades",col_jelly:"Jelly / Translucent Collection — 18 Shades",
+  chain_h:"Supply Chain Flow",chain1_t:"China Factory (FDA/ISO)",chain1_d:"Guangzhou — production, QC, bilingual labeling",
+  chain2_t:"Bulk Export — Sea Freight",chain2_d:"FCL containers, CIF Manzanillo / Veracruz, 18-25 day transit",
+  chain3_t:"Mexico Customs + COFEPRIS",chain3_d:"Import tariff 5-15%, COFEPRIS cosmetic notification 30-60 days",
+  chain4_t:"Mexico Distribution Hub (CDMX)",chain4_d:"Central warehouse → franchise units nationwide, 2-3 day delivery",
+  chain5_t:"Primavera Franchise Salons",chain5_d:"Express format 25-40m² in malls and lifestyle centers",
+  swot_label:"Analysis",swot_h:"SWOT Analysis",swot_sub:"A structured assessment of Primavera's strategic position entering the LATAM nail franchise market.",
+  swot_s:"Strengths",swot_w:"Weaknesses",swot_o:"Opportunities",swot_t:"Threats",
+  s1:"Direct FDA-approved factory access = 40-60% lower COGS vs. competitors",s2:"All-in-one gel formula reduces service time and training complexity",s3:"'Primavera' brand resonates naturally in Spanish & Portuguese markets",s4:"Vertically controlled supply chain from China to salon floor",s5:"Multi-format scalability: kiosk, full studio, retail shelf",
+  w1:"No existing brand recognition in LATAM markets",w2:"COFEPRIS and ANVISA registration add 3-6 months before full launch",w3:"Need to build local franchise training infrastructure",w4:"Single manufacturing source creates supply chain concentration risk",w5:"Currency volatility (MXN, BRL) affects import cost predictability",
+  o1:"LATAM nail salon market projected to grow at 6.8% CAGR through 2028",o2:"Only 12% market penetration by organized franchise chains",o3:"Rising middle-class self-care spending in Mexico City, Monterrey, CDMX",o4:"Plant-based segment growing 18% YoY — premium positioning available",o5:"Mall and lifestyle center expansion creating affordable retail footprints",
+  t1:"Established global chains (OPI, Essie, Color Street) entering LATAM",t2:"Counterfeit Chinese products damaging category reputation",t3:"Changing import tariff regimes (China-Mexico trade tensions)",t4:"Labor informality: unlicensed competitors undercut pricing",t5:"Ingredient regulation tightening in Brazil/Chile",
+  reg_label:"Compliance",reg_h:"Regulatory Landscape",reg_sub:"Each market has distinct cosmetic product registration requirements. Plan 3-6 months lead time.",
+  reg_type:"Classification",reg_timeline:"Timeline",reg_tariff:"Import Tariff",reg_label2:"Labeling",reg_restrict:"Restrictions",
+  reg_mx_h:"Mexico",reg_mx_auth:"COFEPRIS (SSA)",reg_mx_class:"Cosmetic Product Notification",reg_mx_time:"30-90 days",reg_mx_label:"Spanish, ingredients list, importer name & address",reg_mx_restrict:"Prohibited: formaldehyde >0.2%, toluene, DBP",reg_mx_tip:"Plant-based formulas qualify for simplified notification. Priority market.",
+  reg_br_h:"Brazil",reg_br_auth:"ANVISA (RDC 07/2015)",reg_br_class:"Grau 1 Notification (low-risk cosmetics)",reg_br_time:"30 days (e-notification) + INPI trademark",reg_br_label:"Portuguese mandatory, INMETRO conformity",reg_br_restrict:"Must comply with Mercosur Resolution GMC 06/11",reg_br_tip:"Highest tax burden in LATAM. Consider local manufacturing for Phase 2.",
+  reg_ar_h:"Argentina",reg_ar_auth:"ANMAT (Disposición 2819/04)",reg_ar_class:"Cosmetic Product Authorization",reg_ar_time:"60-180 days",reg_ar_label:"Spanish, ANMAT approval number required",reg_ar_restrict:"FX controls may impact import payments",reg_ar_tip:"Currency controls and inflation create cash-flow risk. Phase 3 entry recommended.",
+  reg_cl_h:"Chile",reg_cl_auth:"ISP — Instituto de Salud Pública",reg_cl_class:"Cosmetic Product Notification (RS)",reg_cl_time:"30-60 days",reg_cl_label:"Spanish, country of origin, net content",reg_cl_restrict:"Follow EU Regulation 1223/2009 prohibited list",reg_cl_tip:"0% import tariff via China-Chile FTA. Easiest regulatory environment. Phase 2 target.",
+  fin_label:"Financials",fin_h:"Unit Economics & Financial Model",fin_sub:"Based on express-format franchise unit (30m², 3 technicians, 8hr/day) in tier-1 Mexican city mall.",
+  fin_unit_h:"Unit P&L (Monthly, USD)",fin_item:"Item",fin_conservative:"Conservative",fin_base:"Base Case",fin_optimistic:"Optimistic",
+  fin_revenue:"Revenue",fin_cogs:"Product COGS (12%)",fin_labor:"Labor (3 techs)",fin_rent:"Rent + CAM",fin_royalty:"Franchise Royalty (6%)",fin_other:"Other OpEx",fin_ebitda:"EBITDA",fin_margin:"EBITDA Margin",
+  fin_inv_h:"Investment Overview",fin_cost_item:"Cost Item",fin_range:"Range (USD)",
+  inv1:"Franchise fee",inv2:"Fit-out & furniture",inv3:"Equipment (LED lamps, stations)",inv4:"Initial product inventory",inv5:"Working capital (3 mo)",inv_total:"Total Investment",inv_payback:"Payback Period",inv_payback_val:"18-30 months (base case)",inv_roi:"5-Year ROI",inv_roi_val:"140-220%",
+  fin_chart1_h:"Monthly Revenue Projection (Year 1)",fin_chart2_h:"5-Year Network Growth",
+  strat_label:"Roadmap",strat_h:"Go-to-Market Strategy & Timeline",strat_sub:"Phased approach: establish Mexico, validate unit economics, then expand systematically across LATAM.",
+  tl1_period:"Months 1-6",tl1_h:"Phase 1 — Foundation",tl1_1:"Register Primavera trademark in MX, BR, CL, AR",tl1_2:"File COFEPRIS notification for core 40 SKUs",tl1_3:"Negotiate factory production run",tl1_4:"Design flagship salon concept and franchise operations manual",tl1_5:"Identify Mexico City pilot location (Polanco / Condesa / Santa Fe)",
+  tl2_period:"Months 7-18",tl2_h:"Phase 2 — Mexico Pilot",tl2_1:"Open 3 company-owned pilot salons in CDMX",tl2_2:"Launch franchise prospectus and begin franchisee recruitment",tl2_3:"Establish CDMX distribution hub (3PL partnership)",tl2_4:"Digital marketing: Instagram, TikTok, influencer collaborations",tl2_5:"Validate unit economics; refine pricing and labor model",
+  tl3_period:"Months 19-36",tl3_h:"Phase 3 — Mexico Scale + Chile Entry",tl3_1:"Scale to 25+ franchise units across Mexico",tl3_2:"Launch Chile: Santiago pilot (0% FTA tariff advantage)",tl3_3:"Introduce retail line: Primavera DIY kits in pharmacies",tl3_4:"Begin ANVISA notification for Brazil",tl3_5:"Build regional training academy for nail technician certification",
+  tl4_period:"Year 4-5",tl4_h:"Phase 4 — LATAM Expansion",tl4_1:"Brazil entry: São Paulo and Rio de Janeiro metro areas",tl4_2:"Argentina assessment pending macro stability",tl4_3:"Target: 100+ franchise units across 4 countries",tl4_4:"Launch Primavera Pro wholesale line for independent salons",tl4_5:"Explore sub-franchise master license model for Brazil",
+  cta_h:"Ready to Grow with Primavera?",cta_p:"Join Latin America's most exciting nail salon franchise opportunity. Direct factory access, proven systems, a brand built for the market.",
+  cta_btn1:"Request Franchise Info",cta_btn2:"View Market Data",
+  footer_tag:"Spring Beauty · Quality from Source to Salon",
+  calc_label:"Interactive Tool",
+  calc_h:"How much can you earn with Primavera? 💰",
+  calc_sub:"Adjust the controls to your real situation and instantly see your estimated monthly income, cost breakdown, and the financial advantage of working with our direct factory supply chain.",
+  calc_adv1_t:"Lowest product cost in the market",
+  calc_adv1_d:"Direct FDA-certified factory in China — 12% of revenue vs. 22–28% with generic brands",
+  calc_adv2_t:"Marketing 100% included",
+  calc_adv2_d:"Digital campaigns, seasonal launches and ready-to-use content — at no extra cost",
+  calc_adv3_t:"Brand in constant evolution",
+  calc_adv3_d:"New collections every season, LATAM trends researched for you",
+  calc_panel_t:"🎛️ Configure your business",
+  calc_tier_label:"Location type",
+  calc_tier_kiosk:"Express Kiosk<br><small>15–25 m²</small>",
+  calc_tier_studio:"Studio<br><small>25–40 m²</small>",
+  calc_tier_salon:"Full Salon<br><small>40–70 m²</small>",
+  calc_clients_l:"Clients per day",
+  calc_ticket_l:"Average service price",
+  calc_days_l:"Working days per month",
+  calc_rent_l:"Monthly rent",
+  calc_staff_l:"Number of technicians (besides you)",
+  calc_staff_min:"Just me",
+  calc_staff_max:"5 technicians",
+  calc_salary_l:"Salary per technician / month",
+  calc_overhead_l:"Additional fixed costs (electricity, water, internet…)",
+  calc_toggle_t:"Primavera price (12% of revenue)",
+  calc_toggle_s:"Toggle off to see with generic supplier (22%)",
+  calc_rev_label:"Estimated monthly revenue",
+  calc_profit_label:"Net monthly profit",
+  calc_margin_label:"Margin",
+  calc_annual_label:"Annual estimate",
+  calc_th_item:"Item",
+  calc_th_monthly:"Monthly",
+  calc_th_pct:"% of revenue",
+  calc_row_prod:"💅 Product cost",
+  calc_row_rent:"🏷️ Rent",
+  calc_row_labor:"👩 Payroll (technicians)",
+  calc_row_overhead:"🔌 General expenses",
+  calc_row_royalty:"🤝 Primavera Royalty (6%)",
+  calc_row_net:"✅ Net profit",
+  calc_sav_title:"Primavera advantage this month",
+  calc_sav_desc:"With our direct factory pricing you save <strong id=\"rSavings\" style=\"color:var(--rose-d)\">$0</strong> MXN per month on products vs. generic supplier — that's <strong id=\"rSavingsAnnual\" style=\"color:var(--rose-d)\">$0</strong> MXN per year that stays in your pocket.",
+  calc_sav_desc2:"Plus: <em>marketing included, new collections every season, ongoing training, and a brand that grows with you.</em>",
+  calc_payback_l:"Estimated investment recovery",
+  calc_invest_l:"Estimated initial investment",
+  calc_months:" months",
+  calc_adjust:"Adjust the numbers",
+  calc_rev_sub_unit:"MXN/month",
+  calc_chart_prod:"Products",calc_chart_rent:"Rent",calc_chart_labor:"Payroll",calc_chart_overhead:"Overhead",calc_chart_royalty:"Royalty",calc_chart_profit:"Profit",
+  calc_cta_p:"Do these numbers excite you? Take the next step and talk to our team.",
+  calc_cta_btn:"I want to be a Primavera franchisee 🌸",
+},
+zh:{
+  nav_market:"市场分析",nav_countries:"国家分析",nav_franchise:"特许经营",nav_tech:"产品技术",nav_swot:"SWOT分析",nav_regs:"法规框架",nav_fin:"财务预测",
+  hero_tag:"商业情报报告 · 2026年4月",hero_title:"拉美美甲沙龙<br>特许经营报告",hero_sub:"市场分析 · 战略规划 · 商业机遇 · 法规框架",hero_btn1:"探索市场 ↓",hero_btn2:"查看SWOT分析",hero_scroll:"向下滚动浏览",
+  sum_tag:"执行摘要",sum_title:"数字背后的机遇",sum_desc:"拉丁美洲美甲沙龙行业是全球增速最快的美容细分市场之一，城镇化进程加速、可支配收入增长以及女性劳动力参与率提升共同推动了这一趋势。",
+  m1:"拉美市场规模（2023年）",m2:"年均复合增长率（2024–2030）",m3:"预测市场规模（2030年）",m4:"最高特许经营利润率",m5:"占全球市场份额",m6:"产品颜色总数",
+  mkt_tag:"拉美市场概览",mkt_title:"蓬勃发展的新兴市场",mkt_desc:"拉丁美洲占全球美甲沙龙市场的11.2%，增速几乎是全球平均水平的两倍，巴西和墨西哥引领区域扩张。",
+  ch1_title:"各国市场规模（2023年，百万美元）",ch2_title:"拉美市场增长预测（十亿美元）",
+  drv_tag:"增长驱动力",drv1_h:"城镇化进程",drv1_p:"巴西、墨西哥和哥伦比亚城市人口快速增长，推动美容服务消费持续扩大。",drv2_h:"收入水平提升",drv2_p:"拉美中产阶级持续扩大，个人护理可支配支出显著增加。",drv3_h:"UV凝胶需求爆发",drv3_p:"UV凝胶美甲是增速最快的服务品类——这正是我们的核心产品。",drv4_h:"女性劳动力增长",drv4_p:"拉美女性劳动力参与率创历史新高，推动专业美甲护理需求持续增长。",
+  cty_tag:"国家市场分析",cty_title:"四大优先进入市场",cty_desc:"四个优先目标市场，各具独特市场动态、法规框架和进入机遇。",
+  tab_mx:"🇲🇽 墨西哥",tab_br:"🇧🇷 巴西",tab_ar:"🇦🇷 阿根廷",tab_cl:"🇨🇱 智利",
+  cs_mktsize:"2023年市场规模",cs_share:"占拉美市场份额",cs_cagr:"预测复合增长率",cs_pop:"人口",cs_reg:"监管机构",cs_entry:"进入难度",
+  mx_h:"墨西哥——首选进入市场",mx_why:"为何优先选择墨西哥？",mx_p1:"墨西哥是我们的桥头堡市场。毗邻中国供应链、庞大的城市中产阶级以及繁荣的美容文化，使其成为首个特许经营落地的理想之选。",mx_p2:"墨西哥城、瓜达拉哈拉和蒙特雷是一流的美甲沙龙市场，对高端凝胶美甲服务需求旺盛。「Primavera」品牌名称在西班牙语中具有天然亲和力。",mx_p3:"COFEPRIS无需产品上市前注册——仅需提交经营公告，进口速度远快于巴西或阿根廷。",
+  br_h:"巴西——增速最高的市场",br_why:"巴西市场亮点",br_p1:"巴西是拉美最大的美甲沙龙市场，区域内复合增长率最高。巴西人是全球人均美容服务消费最高的群体之一。",br_p2:"圣保罗、里约热内卢和贝洛奥里藏特提供巨大的特许经营机遇。市场偏好高端、环保意识强的品牌——与Primavera生物基产品线完美契合。",br_p3:"ANVISA将指甲油归类为一级产品（仅需通知备案）。RDC 907/2024规范所有化妆品。葡萄牙语标签和INCI成分命名法为强制要求。",
+  ar_h:"阿根廷——新兴发展机遇",ar_why:"阿根廷市场亮点",ar_p1:"阿根廷拥有以布宜诺斯艾利斯为中心的活跃美容文化。受经济波动影响市场价格敏感，但消费者对高端沙龙体验的忠诚度依然较高。",ar_p2:"ANMAT于2024–2025年更新法规：8067/2024号令与南方共同市场标准接轨，4033/2025号令取消化妆品进口预审批——大幅降低进入壁垒。",ar_p3:"汇率风险是主要挑战。具备本地定价灵活性的特许经营模式对可持续运营至关重要。",
+  cl_h:"智利——高端消费市场",cl_why:"智利市场亮点",cl_p1:"智利人均GDP居拉美最高，监管环境稳定透明。圣地亚哥富裕消费群体对高端沙龙体验表现出强烈需求。",cl_p2:"ISP/ANAMED将指甲油归类为低风险化妆品——四个目标市场中监管负担最轻。这使智利成为继墨西哥之后极具吸引力的第二个试点市场。",cl_p3:"Primavera植物基产品线的生态奢享定位与智利消费者日益增强的环保意识高度契合。",
+  fr_tag:"特许经营模式",fr_title:"竞争格局分析",fr_desc:"深入了解竞争格局，有助于凸显Primavera的核心优势：工厂直供定价、FDA认证产品及1,500+色彩系列。",
+  ft_brand:"品牌",ft_origin:"来源地",ft_invest:"投资范围",ft_seg:"市场定位",ft_latam:"拉美布局",ft_model:"运营模式",ft_m1:"全面特许经营",ft_m2:"特许+直营",ft_m3:"零售特许经营",ft_m4:"快捷亭加盟",ft_m5:"订阅制模式",ft_m6:"工厂直供特许经营",
+  adv_tag:"Primavera优势",adv1_h:"工厂直供成本优势",adv1_p:"直接对接广州工厂，省去中间商，产品成本比通过经销商进货的竞争对手低30–50%。",adv2_h:"市场空白窗口期",adv2_p:"大多数成熟连锁品牌在拉美布局有限。Primavera可率先抢占墨西哥、智利及巴西二线城市的先发优势。",adv3_h:"品牌天然亲和力",adv3_p:"「Primavera」（春天）在西班牙语和葡萄牙语中自然传递清新与自然的品牌联想——目标市场内置品牌资产。",
+  tech_tag:"产品技术",tech_title:"美甲产品创新",tech_desc:"深入理解产品技术体系，是沙龙服务设计、定价策略和供应链采购的关键。我们提供三大主流系统的全线产品。",
+  t1_h:"传统三步凝胶系统",t1_s1h:"底胶",t1_s1p:"打底，增强附着力，保护甲板不被色素污染。",t1_s2h:"彩胶（×2层）",t1_s2p:"UV/LED光固化有色凝胶，薄薄两层涂抹，每层固化30–60秒。",t1_s3h:"封层/表胶",t1_s3p:"封住色彩，增添光泽和耐久度。最终UV/LED固化60秒。",t1_dur:"⏱ 持久2–3周 · 需UV/LED灯 · 行业主流标准",t1_badge:"黄金标准 · 超强持久",
+  t2_h:"三合一凝胶系统",t2_s1h:"一瓶三用",t2_s1p:"底胶+彩色+封层三合一配方，无需分步涂抹。",t2_s2h:"UV/LED固化（或阳光）",t2_s2p:"部分配方（如Bio Seaweed Unity）可在自然光下固化，无需灯具。",t2_s3h:"无浮胶层",t2_s3p:"先进配方无粘手抑制层，无需异丙醇擦除，节省步骤。",t2_dur:"⏱ 服务15–20分钟 · 持久1–2周 · 效率提升40%",t2_badge:"省时利器 · 快捷服务",
+  t3_h:"植物基与生物基系统",t3_s1h:"生物基聚合物",t3_s1p:"来源于植物油（大豆油、蓖麻油）、柠檬酸和木薯淀粉——生物基成分高达84%。",t3_s2h:"25无配方",t3_s2p:"不含甲醛、甲苯、DBP、樟脑、TPHP等25种以上有害化学物质。",t3_s3h:"可呼吸配方",t3_s3p:"允许水分和氧气透过涂层——有益于甲床健康。",t3_dur:"🌎 素食 · 无残忍 · 环保意识消费者",t3_badge:"未来增长赛道 · 生态高端",
+  prod_tag:"我们的工厂 · 中国广州",prod_title:"工厂直供产品组合",prod_desc:"直接对接广州FDA认证美甲工厂——全球领先的美甲产品制造中心。支持批量订购、定制贴牌和出口包装。",
+  pf1:"广州工厂",pf2:"FDA认证产品",pf3:"可选颜色总数",pf4:"批量订购优惠",
+  col1_h:"系列一：不透明与奶油色系",col1_p:"500+高饱和不透明色——正红、裸色、马卡龙、明亮色系和深色调，高色素单层全遮盖。",col2_h:"系列二：H系列 · 果冻与透明色（1,045色）",col2_p:"1,045色半透明果冻和玻璃质感凝胶甲油，完美适用于渐变、叠色和韩系美甲造型。",col2_note:"展示代表性颜色——完整H0001–H1045目录可按需提供",
+  sc_title:"供应链：中国 → 拉美",sc1_h:"广州工厂",sc1_p:"FDA认证生产",sc2_h:"质量管控",sc2_p:"实验室检测+认证",sc3_h:"批量出口",sc3_p:"Primavera定制贴牌",sc4_h:"进口至墨西哥",sc4_p:"符合COFEPRIS要求",sc5_h:"特许经营沙龙",sc5_p:"拉美渠道分销",
+  swot_tag:"战略分析",swot_title:"SWOT分析",swot_desc:"对Primavera在拉美美甲沙龙特许经营市场中战略地位的全面评估。",sw_s:"优势",sw_s_h:"内部优势",sw_w:"劣势",sw_w_h:"内部挑战",sw_o:"机会",sw_o_h:"市场机遇",sw_t:"威胁",sw_t_h:"外部风险",
+  ss1:"直接对接FDA认证广州工厂",ss2:"产品成本比经销商低30–50%",ss3:"1,500+色彩组合——同类最广",ss4:"品牌名「Primavera」在西班牙语和葡萄牙语中天然亲和",ss5:"三大系统全线产品：传统、三合一、生物基",ss6:"基于全球对标的成熟特许经营框架",
+  sw1:"新品牌——拉美市场知名度尚待建立",sw2:"多国监管合规复杂度高",sw3:"特许经营初始投资较高（12万–28万美元）",sw4:"供应链依赖单一中国工厂",sw5:"需要语言和文化本地化适配",sw6:"多个拉美市场面临汇率风险",
+  so1:"拉美市场2030年前复合增长率8.6%",so2:"UV凝胶是增速最快的服务品类",so3:"大多数全球连锁品牌在拉美布局有限",so4:"环保意识提升推动植物基产品需求增长",so5:"巴西：区域最高增速（约10%），二线城市市场空白",so6:"阿根廷2025年进口解除管制降低进入壁垒",
+  st1:"本地成熟沙龙连锁拥有忠诚客群",st2:"阿根廷汇率波动与经济不稳定性",st3:"COFEPRIS/ANVISA/ANMAT监管政策变化风险",st4:"低价本地指甲油品牌的零售冲击",st5:"NBAR、MiniLuxe等全球连锁加速拓展拉美",st6:"中国供应链中断风险（地缘政治、物流）",
+  reg_tag:"法规框架",reg_title:"各国合规要求",reg_desc:"每个拉美市场对进口和销售美甲化妆品都有各自的监管机构和流程，以下是核心合规要点。",
+  mx_r1:"美甲化妆品无需上市前注册——市场准入速度显著提升。",mx_r2:"经营公告通过DIGIPRIS平台线上提交，须在商业化前完成。",mx_r3:"需指定墨西哥本地代表（自然人或法人）——承担监管责任。",mx_r4:"西班牙语标签为强制要求：产品名称、生产商、成分、使用说明、警示语。",mx_r5:"禁用物质：铅、汞、某些对羟基苯甲酸酯。我们的FDA认证配方符合要求。",mx_r6:"<strong>难度：中等</strong>——FDA认证产品配合本地代表，合规流程较为顺畅。",
+  br_r1:"指甲油被归类为<strong>一级产品</strong>（低风险）——仅需通知备案，无需全面注册。约97%的化妆品走此流程。",br_r2:"进口商需依据RDC 16/2014取得经营授权（ATO），已在RDC 907/2024框架下更新。",br_r3:"葡萄牙语标签为强制要求，所有成分须使用INCI命名法。",br_r4:"产品须确保不含有害微生物，需提供安全数据。",br_r5:"2024年RDC 907对既往法规进行整合简化——对进口商较为有利。",br_r6:"<strong>难度：高</strong>——拉美合规最复杂的市场，建议第二阶段进入（2027年）。",
+  ar_r1:"<strong>4033/2025号令：</strong>化妆品进口预审批已取消——2025年起重大壁垒消除。",ar_r2:"8067/2024号令适用南方共同市场标准——区域法规协调持续推进。",ar_r3:"仍须遵守安全标准、标签规范和当地卫生法规。",ar_r4:"西班牙语标签为强制要求，须列明INCI成分清单。",ar_r5:"主要风险在于汇率波动（阿根廷比索/美元），而非监管合规。",ar_r6:"<strong>难度：中等</strong>——受益于2025年解除管制，第三阶段进入（2028年）。",
+  cl_r1:"指甲油被归类为<strong>低风险化妆品</strong>——拉美四个目标市场中监管负担最轻。",cl_r2:"ANAMED（ISP下属机构）负责通知/注册流程——低风险产品手续简便。",cl_r3:"西班牙语标签为强制要求，适用标准成分披露规则。",cl_r4:"智利与中国签有多项自由贸易协定——进口关税条件优惠。",cl_r5:"监管环境稳定透明——合规规划中可预测性最强的市场。",cl_r6:"<strong>难度：低–中等</strong>——建议作为墨西哥之后的第二试点市场。",
+  fin_tag:"财务预测",fin_title:"投资与回报",fin_desc:"基于可比拉美特许经营项目的保守预测，已根据墨西哥市场条件和工厂直供成本优势进行调整。",
+  fi1_h:"单店——墨西哥城",fi_inv:"初始投资",fi_size:"沙龙面积",fi_seats:"服务工位",fi_rev:"年营收（第一年）",fi_cogs:"产品成本（COGS）",fi_labor:"人力成本（60%提成模式）",fi_rent:"租金+运营成本",fi_margin:"<strong>净利润率</strong>",
+  fi2_h:"五年扩张计划",fy1:"第1年——墨西哥（1家）",fy2:"第2年——墨西哥（3家）",fy3:"第3年——墨西哥+智利（6家）",fy4:"第4年——进入巴西（10家）",fy5:"第5年——拉美20家以上",fi_fran:"特许加盟费（每店）",fi_roy:"持续权利金比例",fi_break:"<strong>盈亏平衡点</strong>",
+  ch3_title:"五年各国营收预测（百万美元）",
+  str_tag:"市场进入策略",str_title:"墨西哥优先，逐步覆盖拉美",str_desc:"分阶段市场进入策略在降低风险的同时，积累品牌资产和运营能力，为进入更复杂市场奠定基础。",
+  ph1_tag:"第一阶段 · 2026年",ph1_h:"墨西哥战略桥头堡",ph1_p:"在墨西哥城（Polanco或Santa Fe）开设旗舰店。完成COFEPRIS合规、本地供应链搭建和品牌形象建立。试运行全套三系统服务菜单。",
+  ph2_tag:"第二阶段 · 2027年",ph2_h:"规模扩张+进入智利",ph2_p:"墨西哥扩展至5–8家门店，进入智利（ISP低风险通道），同步建立美甲产品线上零售渠道。",
+  ph3_tag:"第三阶段 · 2027–28年",ph3_h:"进入巴西和阿根廷",ph3_p:"完成ANVISA合规后进入巴西（圣保罗），阿根廷在汇率稳定并完成ANMAT备案后跟进。",
+  ph4_tag:"第四阶段 · 2029–30年",ph4_h:"拉美特许经营网络",ph4_p:"四国20家以上特许经营门店，产品线向零售端延伸（药妆店、电商），建立区域培训学院。",
+  tl_title:"实施时间表",tl1_d:"2026年Q2",tl1_h:"法律架构搭建+COFEPRIS注册",tl1_p:"设立墨西哥法人，指定本地代表，提交经营公告。完成广州工厂首批货物进口。",tl2_d:"2026年Q3",tl2_h:"旗舰店开业——墨西哥城",tl2_p:"首家Primavera美甲沙龙正式开业。完成三系统服务培训，启动西班牙语品牌社交媒体运营。",tl3_d:"2026年Q4",tl3_h:"特许经营体系正式化",tl3_p:"完善SOP、培训材料和产品定价体系，签署首批2–3份加盟协议，智利法规申报工作启动。",tl4_d:"2027年Q1–Q2",tl4_h:"墨西哥规模化+智利开业",tl4_p:"墨西哥5家门店投入运营，圣地亚哥首家智利店开业，启动巴西ANVISA备案流程。",tl5_d:"2028年",tl5_h:"进入巴西和阿根廷市场",tl5_p:"圣保罗首家巴西门店开业，布宜诺斯艾利斯阿根廷试点启动，墨西哥区域分拨中心建立。",tl6_d:"2030年",tl6_h:"20家以上门店 · 拉美全网络覆盖",tl6_p:"Primavera成为拉美公认的高端美甲沙龙品牌，产品线进入零售和电商渠道，特许经营学院正式运营。",
+  cta_h:"准备好在拉美缔造美甲新未来了吗？",cta_p:"Primavera融合工厂直供经济优势、1,500+色彩组合与24亿美元市场机遇，时间窗口已开启——行动起来。",cta_btn1:"联系我们洽谈合作 →",cta_btn2:"返回顶部 ↑",
+  footer_copy:"© 2026 Primavera美甲沙龙。保密商业报告。数据来源：Grand View Research、IMARC Group、Technavio及一手市场调研。",
+  tech_label:"创新技术",tech_h:"美甲产品技术",tech_sub:"三大产品类别定义当今专业美甲市场。",tech1_badge:"传统",tech1_h:"三步UV/LED光疗凝胶",tech1_p1:"行业十年标准，底油、凝胶色彩、封层三步固化，持久2-4周。",tech2_badge:"推荐",tech2_h:"全合一凝胶甲油",tech2_p1:"新一代单瓶三合一配方，服务时间缩短30-40%，降低成本。",tech3_badge:"🌿 生态高端",tech3_h:"植物基与生物配方",tech3_p1:"植物基聚合物形成柔韧透气的薄膜，比普通凝胶更温和，持久<strong>3–5周</strong>。植物活性成分在使用期间滋养甲床，使指甲<strong>越来越强健</strong>。",spec_dur:"持久度",spec_time:"涂抹时间",spec_rem:"卸甲方式",spec_margin:"利润率",spec_dur1:"2-4周",spec_time1:"45-60分钟",spec_rem1:"丙酮浸泡",spec_margin1:"高",spec_dur2:"3-5周",spec_time2:"25-35分钟",spec_rem2:"撕除或丙酮",spec_margin2:"极高",spec_dur3:"3-5周",spec_time3:"30-45分钟",spec_rem3:"水洗/撕除",spec_margin3:"高端+",tech1_l1:"成熟专业配方",tech1_l2:"丰富色彩范围",tech1_l3:"墨巴沙龙主流",tech1_l4:"需专业美甲师",tech2_l1:"效率提升，多接客户",tech2_l2:"少SKU，库存简单",tech2_l3:"更易培训",tech2_l4:"Primavera核心产品线",tech3_l1:"🌿 柔韧生物聚合物比标准凝胶更耐久不崩裂",tech3_l2:"💅 植物油在使用期间滋养强化甲床",tech3_l3:"🔬 零有毒成分——不会使指甲变薄受损",tech3_l4:"✨ 比普通凝胶溢价20-35%",cmp_attr:"属性",cmp_price:"零售价/次",cmp_cogs:"产品成本/次",cmp_skus:"所需SKU",cmp_lamp:"所需设备",cmp_lamp1:"UV/LED灯",cmp_lamp2:"LED灯",cmp_lamp3:"无/LED",cmp_cert:"中国工厂认证",cmp_yes:"✓ 可提供",cmp_req:"需注册",cmp_fast:"快速通道",cmp_mx:"墨西哥COFEPRIS",prod_label:"供应链",prod_h:"产品与工厂",prod_sub:"FDA认证中国工厂覆盖三大技术类别，全程垂直管控。",factory_h:"工厂资质",fact1:"美国FDA注册",fact2:"ISO 22716 GMP",fact3:"活跃SKU",fact4:"MOQ 300件/SKU",colors_h:"签名色彩系列",colors_sub:"12ml瓶装，不透明与果冻两种效果。",col_opaque:"不透明系列 — 24色",col_jelly:"果冻系列 — 18色",chain_h:"供应链流程",chain1_t:"中国工厂（FDA/ISO）",chain1_d:"广州生产质检双语贴标",chain2_t:"海运整箱出口",chain2_d:"CIF曼萨尼约/韦拉克鲁斯，18-25天",chain3_t:"墨西哥海关+COFEPRIS",chain3_d:"关税5-15%，申报30-60天",chain4_t:"墨西哥城配送中心",chain4_d:"中央仓库→全国门店2-3天",chain5_t:"Primavera加盟沙龙",chain5_d:"25-40㎡快捷格式，购物中心",swot_label:"战略分析",swot_h:"SWOT分析",swot_sub:"Primavera进入拉美美甲加盟市场的战略定位评估。",swot_s:"优势",swot_w:"劣势",swot_o:"机遇",swot_t:"威胁",s1:"直接对接FDA认证工厂，成本低40-60%",s2:"全合一凝胶缩短服务时间",s3:"Primavera品牌西葡语天然契合",s4:"全程垂直供应链管控",s5:"多格式扩展灵活",w1:"拉美暂无品牌知名度",w2:"注册需额外3-6个月",w3:"需建立本地培训体系",w4:"单一生产商集中风险",w5:"汇率波动影响成本预期",o1:"拉美市场CAGR 6.8%至2028",o2:"连锁渗透率仅12%",o3:"中产自我护理消费增长",o4:"植物基细分年增18%",o5:"购物中心扩张创造平价空间",t1:"OPI、Essie等全球连锁进入拉美",t2:"假冒产品损害品类口碑",t3:"关税政策变动风险",t4:"非正规竞争者低价冲击",t5:"巴智成分法规趋严",reg_label:"合规",reg_h:"监管环境",reg_sub:"各市场注册要求不同，提前3-6个月准备。",reg_type:"分类",reg_timeline:"周期",reg_tariff:"进口关税",reg_label2:"标签要求",reg_restrict:"限制规定",reg_mx_h:"墨西哥",reg_mx_auth:"COFEPRIS",reg_mx_class:"化妆品申报",reg_mx_time:"30-90天",reg_mx_label:"西班牙语，成分列表，进口商信息",reg_mx_restrict:"禁用：甲醛>0.2%、甲苯、DBP",reg_mx_tip:"植物基配方可享简化申报，优先市场。",reg_br_h:"巴西",reg_br_auth:"ANVISA",reg_br_class:"一级申报（低风险）",reg_br_time:"30天电子申报+INPI商标",reg_br_label:"葡萄牙语强制，INMETRO认证",reg_br_restrict:"须符合Mercosur GMC 06/11",reg_br_tip:"拉美税负最高，第二阶段考虑本地制造合作。",reg_ar_h:"阿根廷",reg_ar_auth:"ANMAT",reg_ar_class:"化妆品产品授权",reg_ar_time:"60-180天",reg_ar_label:"西班牙语，ANMAT批准编号",reg_ar_restrict:"外汇管制可能影响进口付款",reg_ar_tip:"汇率管制和通胀风险，建议第三阶段进入。",reg_cl_h:"智利",reg_cl_auth:"ISP",reg_cl_class:"化妆品申报（RS）",reg_cl_time:"30-60天",reg_cl_label:"西班牙语、原产国、净含量",reg_cl_restrict:"遵循欧盟1223/2009禁用清单",reg_cl_tip:"中智FTA零关税，监管最友好，第二阶段目标。",fin_label:"财务模型",fin_h:"单店经济模型",fin_sub:"一线城市购物中心快捷格式门店（30㎡，3名美甲师，8小时）。",fin_unit_h:"单店月度损益表（USD）",fin_item:"项目",fin_conservative:"保守估计",fin_base:"基准情景",fin_optimistic:"乐观估计",fin_revenue:"营业收入",fin_cogs:"产品成本（12%）",fin_labor:"人工（3技师）",fin_rent:"租金+物业",fin_royalty:"特许权使用费（6%）",fin_other:"其他运营费用",fin_ebitda:"EBITDA",fin_margin:"EBITDA利润率",fin_inv_h:"投资概览",fin_cost_item:"费用项目",fin_range:"金额范围（USD）",inv1:"加盟费",inv2:"装修与家具",inv3:"设备（LED灯、美甲台）",inv4:"初始产品库存",inv5:"流动资金（3个月）",inv_total:"总投资",inv_payback:"回收周期",inv_payback_val:"18-30个月（基准情景）",inv_roi:"5年投资回报率",inv_roi_val:"140-220%",fin_chart1_h:"第一年月度营收预测",fin_chart2_h:"五年网点扩张计划",strat_label:"路线图",strat_h:"市场进入战略与时间规划",strat_sub:"分阶段推进：扎根墨西哥，验证单店模型，再扩张至拉美。",tl1_period:"第1-6个月",tl1_h:"第一阶段 — 奠定基础",tl1_1:"在MX、BR、CL、AR注册Primavera商标",tl1_2:"为核心40个SKU提交COFEPRIS申报",tl1_3:"谈判批量生产，每SKU起订5,000件",tl1_4:"设计旗舰沙龙概念及加盟运营手册",tl1_5:"选定墨西哥城试点位置",tl2_period:"第7-18个月",tl2_h:"第二阶段 — 墨西哥试点",tl2_1:"在墨西哥城开设3家直营试点门店",tl2_2:"发布招商手册，启动加盟商招募",tl2_3:"建立墨西哥城配送中心（3PL合作）",tl2_4:"数字营销：Instagram、TikTok、达人合作",tl2_5:"验证单店经济，优化定价和人工配置",tl3_period:"第19-36个月",tl3_h:"第三阶段 — 墨西哥规模化+智利进入",tl3_1:"扩张至25家以上加盟门店",tl3_2:"进入智利：圣地亚哥试点（FTA零关税）",tl3_3:"推出零售线：Primavera DIY套装进入药妆店",tl3_4:"启动巴西ANVISA申报（18个月规划）",tl3_5:"建立地区美甲师培训学院",tl4_period:"第4-5年",tl4_h:"第四阶段 — 拉美全面扩张",tl4_1:"进入巴西：圣保罗和里约热内卢",tl4_2:"视阿根廷宏观稳定性评估进入",tl4_3:"目标：4国100家以上加盟门店",tl4_4:"推出Primavera Pro批发产品线",tl4_5:"探索巴西区域主加盟授权模式",cta_h:"准备好与Primavera共同成长？",cta_p:"加入拉丁美洲最具潜力的美甲连锁加盟机遇，直通工厂货源，品牌为市场量身打造。",cta_btn1:"获取加盟资料",cta_btn2:"查看市场数据",footer_tag:"春日美丽 · 从源头到沙龙的品质保证",
+  calc_label:"互动工具",
+  calc_h:"加入Primavera能赚多少？ 💰",
+  calc_sub:"调整以下参数，即时查看月收入预估、成本明细，以及与我们直供工厂合作的财务优势。",
+  calc_adv1_t:"市场最低产品成本",
+  calc_adv1_d:"中国FDA认证直供工厂 — 产品成本仅占收入12%，而普通品牌需22–28%",
+  calc_adv2_t:"营销费用100%全包",
+  calc_adv2_d:"数字营销、季节性新品发布、随用随取内容 — 无额外费用",
+  calc_adv3_t:"品牌持续进化",
+  calc_adv3_d:"每季上新，专为拉美市场研究趋势，帮你跑在前面",
+  calc_panel_t:"🎛️ 配置你的店铺",
+  calc_tier_label:"门店类型",
+  calc_tier_kiosk:"快捷亭<br><small>15–25 m²</small>",
+  calc_tier_studio:"美甲工作室<br><small>25–40 m²</small>",
+  calc_tier_salon:"完整沙龙<br><small>40–70 m²</small>",
+  calc_clients_l:"每日客户数",
+  calc_ticket_l:"平均服务单价",
+  calc_days_l:"每月工作天数",
+  calc_rent_l:"月租金",
+  calc_staff_l:"美甲技师人数（不含本人）",
+  calc_staff_min:"只有我",
+  calc_staff_max:"5名技师",
+  calc_salary_l:"每名技师月薪",
+  calc_overhead_l:"其他固定支出（水电、网络等）",
+  calc_toggle_t:"Primavera供应价格（收入的12%）",
+  calc_toggle_s:"关闭此项可对比普通供应商（22%）",
+  calc_rev_label:"预计月收入",
+  calc_profit_label:"月净利润",
+  calc_margin_label:"利润率",
+  calc_annual_label:"年度预估",
+  calc_th_item:"项目",
+  calc_th_monthly:"月度",
+  calc_th_pct:"占收入比例",
+  calc_row_prod:"💅 产品成本",
+  calc_row_rent:"🏷️ 租金",
+  calc_row_labor:"👩 人工薪资",
+  calc_row_overhead:"🔌 日常运营支出",
+  calc_row_royalty:"🤝 Primavera特许权费（6%）",
+  calc_row_net:"✅ 净利润",
+  calc_sav_title:"本月Primavera优势",
+  calc_sav_desc:"使用我们的工厂直供价，与普通供应商相比，每月节省产品成本 <strong id=\"rSavings\" style=\"color:var(--rose-d)\">$0</strong> MXN — 即每年多留 <strong id=\"rSavingsAnnual\" style=\"color:var(--rose-d)\">$0</strong> MXN 在你口袋里。",
+  calc_sav_desc2:"此外：<em>营销全包、每季新品、持续培训，品牌与你共同成长。</em>",
+  calc_payback_l:"预计投资回收期",
+  calc_invest_l:"预计初始投资",
+  calc_months:"个月",
+  calc_adjust:"请调整参数",
+  calc_rev_sub_unit:"MXN/月",
+  calc_chart_prod:"产品",calc_chart_rent:"租金",calc_chart_labor:"薪资",calc_chart_overhead:"运营支出",calc_chart_royalty:"特许费",calc_chart_profit:"净利润",
+  calc_cta_p:"这些数字让你心动了吗？立即联系我们的团队，迈出下一步。",
+  calc_cta_btn:"我要成为Primavera加盟商 🌸",
+},
+es:{
+  nav_market:"Mercado",nav_countries:"Países",nav_franchise:"Franquicia",
+    nav_startup:"📋 Guía Startup",nav_tech:"Tecnología",nav_swot:"FODA",nav_regs:"Regulaciones",nav_fin:"Financiero",
+  hero_tag:"Informe de Inteligencia Empresarial · Abril 2026",hero_title:"Informe de Franquicia<br>Nail Salon LATAM",hero_sub:"Análisis de Mercado · Estrategia · Oportunidad · Regulaciones",hero_btn1:"Explorar el Mercado ↓",hero_btn2:"Ver Análisis FODA",hero_scroll:"Desplazar para explorar",
+  sum_tag:"Resumen Ejecutivo",sum_title:"La Oportunidad en Números",sum_desc:"La industria de nail salons en LATAM es uno de los segmentos de belleza de más rápido crecimiento a nivel global, impulsado por la urbanización, el aumento del ingreso disponible y la mayor participación femenina en el mercado laboral.",
+  m1:"Mercado LATAM 2023",m2:"CAGR Anual 2024–2030",m3:"Mercado Proyectado 2030",m4:"Márgenes de Franquicia",m5:"Participación Global",m6:"Colores en Portfolio",
+  mkt_tag:"Panorama del Mercado LATAM",mkt_title:"Un Mercado en Ascenso",mkt_desc:"América Latina representa el 11.2% del mercado global de nail salons — creciendo a casi el doble del promedio mundial, con Brasil y México liderando la expansión.",
+  ch1_title:"Tamaño de Mercado por País (2023, USD M)",ch2_title:"Pronóstico de Crecimiento LATAM (USD Billones)",
+  drv_tag:"Motor de Crecimiento",drv1_h:"Urbanización",drv1_p:"El rápido crecimiento urbano en Brasil, México y Colombia impulsa la demanda de servicios de belleza.",drv2_h:"Ingresos en Alza",drv2_p:"La clase media en expansión destina más gasto discrecional al cuidado personal.",drv3_h:"Auge del Gel UV",drv3_p:"Las extensiones y overlays de gel UV son el segmento de servicio de mayor crecimiento — precisamente nuestra oferta central.",drv4_h:"Fuerza Laboral Femenina",drv4_p:"Récord en la participación laboral femenina en LATAM impulsa la demanda de cuidado profesional de uñas.",
+  cty_tag:"Análisis por País",cty_title:"Mercados Prioritarios LATAM",cty_desc:"Cuatro mercados prioritarios, cada uno con dinámicas, marcos regulatorios y oportunidades de entrada distintas.",
+  tab_mx:"🇲🇽 México",tab_br:"🇧🇷 Brasil",tab_ar:"🇦🇷 Argentina",tab_cl:"🇨🇱 Chile",
+  cs_mktsize:"Tamaño de Mercado 2023",cs_share:"Participación LATAM",cs_cagr:"CAGR Proyectado",cs_pop:"Población",cs_reg:"Regulador",cs_entry:"Dificultad de Entrada",
+  mx_h:"México — Mercado de Entrada Prioritario",mx_why:"¿Por Qué México Primero?",mx_p1:"México es nuestro mercado de cabecera. La proximidad a nuestra cadena de suministro china, una gran clase media urbana y una cultura de belleza próspera lo hacen ideal para el primer despliegue de la franquicia.",mx_p2:"Ciudad de México, Guadalajara y Monterrey son mercados top para nail salons con fuerte demanda de servicios de gel premium. El nombre de marca 'Primavera' resuena de forma natural en español.",mx_p3:"COFEPRIS no requiere registro previo al mercado — solo un Aviso de Operación, lo que hace la importación más rápida que en Brasil o Argentina.",
+  br_h:"Brasil — Mayor Crecimiento",br_why:"Aspectos Destacados del Mercado Brasileño",br_p1:"Brasil es el mayor mercado de nail salons en LATAM y registra el CAGR más alto de la región. Los brasileños son de los mayores consumidores per cápita de servicios de belleza en el mundo.",br_p2:"São Paulo, Río de Janeiro y Belo Horizonte ofrecen enormes oportunidades de franquicia. El mercado favorece marcas premium y eco-conscientes — alineando perfectamente con la línea bio-based de Primavera.",br_p3:"ANVISA clasifica el esmalte como Grado I (solo notificación). RDC 907/2024 rige todos los cosméticos. Etiquetado en portugués y nomenclatura INCI son obligatorios.",
+  ar_h:"Argentina — Oportunidad Emergente",ar_why:"Aspectos Destacados del Mercado Argentino",ar_p1:"Argentina tiene una vibrante cultura de belleza centrada en Buenos Aires. El mercado es sensible al precio por la volatilidad económica, pero los consumidores mantienen lealtad a experiencias de salón premium.",ar_p2:"ANMAT actualizó regulaciones en 2024–2025: la Disposición 8067/2024 alinea con estándares MERCOSUR, y la Disposición 4033/2025 eliminó la aprobación previa de importación para cosméticos.",ar_p3:"El riesgo cambiario es el principal desafío. Un modelo de franquicia con flexibilidad de precios local es esencial para operaciones sostenibles.",
+  cl_h:"Chile — Mercado Premium",cl_why:"Aspectos Destacados del Mercado Chileno",cl_p1:"Chile tiene el PIB per cápita más alto de LATAM y un entorno regulatorio estable y transparente. La base consumidora acomodada de Santiago muestra fuerte apetito por experiencias de salón premium.",cl_p2:"ISP/ANAMED clasifica el esmalte como Cosmético de Bajo Riesgo — la menor carga regulatoria de los cuatro mercados objetivo. Esto hace a Chile un atractivo mercado piloto secundario tras México.",cl_p3:"El posicionamiento eco-lujo de la línea plant-based de Primavera se alinea con la creciente conciencia ambiental de los consumidores chilenos.",
+  fr_tag:"Modelos de Franquicia",fr_title:"Panorama Competitivo",fr_desc:"Comprender el paisaje competitivo ayuda a posicionar la ventaja única de Primavera: precios directos de fábrica, productos aprobados por FDA y más de 1,500 colores.",
+  ft_brand:"Marca",ft_origin:"Origen",ft_invest:"Rango de Inversión",ft_seg:"Segmento",ft_latam:"Presencia LATAM",ft_model:"Modelo",ft_m1:"Franquicia completa",ft_m2:"Franquicia + Corp.",ft_m3:"Franquicia (retail)",ft_m4:"Kiosco franquicia",ft_m5:"Modelo suscripción",ft_m6:"Franquicia fábrica-directa",
+  adv_tag:"Ventaja Primavera",adv1_h:"Ventaja de Costo Fábrica-Directo",adv1_p:"Acceso directo a la fábrica de Guangzhou elimina intermediarios, entregando costos de producto 30–50% menores vs. competidores que usan distribuidores.",adv2_h:"Ventana de Mercado Sin Explotar",adv2_p:"La mayoría de las cadenas establecidas tienen presencia mínima en LATAM. Primavera puede capturar la ventaja de primer movedor en México, Chile y ciudades secundarias de Brasil.",adv3_h:"Resonancia Natural de Marca",adv3_p:"'Primavera' transmite naturalmente frescura y naturaleza en español y portugués — una ventaja de brand equity incorporada en los mercados objetivo.",
+  tech_tag:"Tecnología de Producto",tech_title:"Innovación en Esmaltes",tech_desc:"Comprender la tecnología de producto es clave para el diseño de servicios de salón, estrategia de precios y abastecimiento. Ofrecemos los tres sistemas principales.",
+  t1_h:"Sistema de Gel Tradicional 3 Pasos",t1_s1h:"Base Coat",t1_s1p:"Prepara la uña, mejora la adhesión y protege la placa ungueal de manchas.",t1_s2h:"Gel de Color (×2 capas)",t1_s2p:"Gel pigmentado curado con UV/LED en dos capas finas. Cada capa cura 30–60 seg.",t1_s3h:"Top Coat / Sellador",t1_s3p:"Sella el color, agrega brillo y durabilidad. Curado final UV/LED de 60 seg.",t1_dur:"⏱ Dura 2–3 semanas · Requiere lámpara UV/LED · Estándar de la industria",t1_badge:"Estándar de Oro · Alta Durabilidad",
+  t2_h:"Sistema de Gel Todo-en-Uno",t2_s1h:"Aplicación en Un Solo Frasco",t2_s1p:"Base + color + top coat en una sola fórmula. Sin capas separadas.",t2_s2h:"Curado UV/LED (o Luz Solar)",t2_s2p:"Algunas fórmulas curan con luz solar directa — sin lámpara necesaria.",t2_s3h:"Sin Capa Pegajosa",t2_s3p:"Fórmulas avanzadas sin capa inhibidora, eliminando el paso de limpieza con alcohol isopropílico.",t2_dur:"⏱ Servicio de 15–20 min · Dura 1–2 semanas · 40% más rápido",t2_badge:"Ahorro de Tiempo · Servicios Express",
+  t3_h:"Base Vegetal y Bio-Based",t3_s1h:"Polímeros de Origen Vegetal",t3_s1p:"Derivados de aceites vegetales (soya, ricino), ácido cítrico y almidón de yuca — hasta 84% bio-sourced.",t3_s2h:"Fórmula 25-Libre",t3_s2p:"Libre de 25+ químicos tóxicos incluyendo formaldehído, tolueno, DBP, alcanfor y TPHP.",t3_s3h:"Fórmula Transpirable",t3_s3p:"Permite el paso de agua y oxígeno a través del recubrimiento — más saludable para las uñas.",t3_dur:"🌎 Vegano · Sin crueldad · Consumidores eco-conscientes",t3_badge:"Crecimiento Futuro · Eco Premium",
+  prod_tag:"Nuestra Fábrica · Guangzhou, China",prod_title:"Portfolio de Producto Directo de Fábrica",prod_desc:"Acceso directo a una fábrica de esmaltes aprobada por FDA en Guangzhou — el hub manufacturero líder mundial en cuidado de uñas. Pedidos a granel, etiquetado personalizado y empaque listo para exportación.",
+  pf1:"Fábrica Guangzhou",pf2:"Productos Aprobados FDA",pf3:"Colores Disponibles",pf4:"Precios por Volumen",
+  col1_h:"Colección 1: Serie Opaca y Cremosa",col1_p:"500+ colores ricos y opacos — rojos, nude, pasteles, brillantes y tonos profundos. Alta pigmentación, cobertura en una capa.",col2_h:"Colección 2: Serie H · Gelatina y Transparente (1,045 colores)",col2_p:"1,045 colores de gel semitransparente tipo gelatina y acabado glass. Perfecto para degradados, capas y nail art estilo coreano.",col2_note:"Mostrando colores representativos — catálogo completo H0001–H1045 disponible a pedido",
+  sc_title:"Cadena de Suministro: China → LATAM",sc1_h:"Fábrica Guangzhou",sc1_p:"Producción aprobada FDA",sc2_h:"Control de Calidad",sc2_p:"Pruebas lab + certificación",sc3_h:"Exportación a Granel",sc3_p:"Etiquetado Primavera",sc4_h:"Importación a México",sc4_p:"Cumple COFEPRIS",sc5_h:"Salones Franquicia",sc5_p:"Distribución LATAM",
+  swot_tag:"Análisis Estratégico",swot_title:"Análisis FODA",swot_desc:"Una evaluación integral de la posición de Primavera en el mercado de franquicias de nail salons en LATAM.",sw_s:"Fortalezas",sw_s_h:"Ventajas Internas",sw_w:"Debilidades",sw_w_h:"Desafíos Internos",sw_o:"Oportunidades",sw_o_h:"Oportunidades de Mercado",sw_t:"Amenazas",sw_t_h:"Riesgos Externos",
+  ss1:"Acceso directo a fábrica de Guangzhou aprobada FDA",ss2:"Costos de producto 30–50% menores que distribuidores",ss3:"1,500+ colores — el portfolio más amplio de su clase",ss4:"Nombre 'Primavera' resuena naturalmente en español y portugués",ss5:"Los tres sistemas de uñas: tradicional, todo-en-uno, bio-based",ss6:"Marco de franquicia probado basado en comparables globales",
+  sw1:"Marca nueva — sin reconocimiento establecido en LATAM aún",sw2:"Complejidad de cumplimiento regulatorio en múltiples países",sw3:"Alta inversión inicial de franquicia ($120K–$280K)",sw4:"Dependencia de cadena de suministro en fábrica china única",sw5:"Requisitos de localización lingüística y cultural",sw6:"Riesgo cambiario en múltiples mercados LATAM",
+  so1:"Mercado LATAM creciendo a CAGR del 8.6% hasta 2030",so2:"El Gel UV es la categoría de servicio de mayor crecimiento",so3:"La mayoría de las cadenas globales tienen presencia mínima en LATAM",so4:"La conciencia eco en alza impulsa la demanda de productos plant-based",so5:"Brasil: mayor CAGR regional (~10%), ciudades secundarias desatendidas",so6:"La desregulación de importación de Argentina en 2025 reduce barreras",
+  st1:"Cadenas de salones locales establecidas con clientes leales",st2:"Volatilidad cambiaria argentina e inestabilidad económica",st3:"Cambios regulatorios en COFEPRIS / ANVISA / ANMAT",st4:"Marcas locales de esmalte de bajo costo compitiendo en retail",st5:"Franquicias globales (NBAR, MiniLuxe) expandiéndose en LATAM",st6:"Riesgo de disrupción en cadena de suministro china",
+  reg_tag:"Marco Regulatorio",reg_title:"Cumplimiento por País",reg_desc:"Cada mercado LATAM tiene un organismo regulador y proceso distinto para importar y vender cosméticos para uñas.",
+  mx_r1:"No se requiere registro previo al mercado para cosméticos de uñas — entrada al mercado significativamente más rápida.",mx_r2:"Aviso de Operación presentado en línea vía plataforma DIGIPRIS antes de la comercialización.",mx_r3:"Se requiere representante mexicano local (persona física o moral) — asume responsabilidad regulatoria.",mx_r4:"Etiquetado en español obligatorio: nombre del producto, fabricante, ingredientes, instrucciones, advertencias.",mx_r5:"Sustancias prohibidas: plomo, mercurio, ciertos parabenos. Nuestras fórmulas aprobadas por FDA cumplen.",mx_r6:"<strong>Dificultad: Media</strong> — sencillo para productos con certificación FDA y representante local.",
+  br_r1:"Esmalte clasificado como <strong>Grado I</strong> (bajo riesgo) — solo notificación, no registro completo. ~97% de cosméticos siguen esta vía.",br_r2:"Importador requiere Autorización para Operar (ATO) per RDC 16/2014. Actualizado bajo RDC 907/2024.",br_r3:"Etiquetado en portugués obligatorio. Nomenclatura INCI requerida para todos los ingredientes.",br_r4:"Productos deben estar libres de microorganismos dañinos. Se requieren datos de seguridad.",br_r5:"Actualización 2024 (RDC 907) consolidó y simplificó regulaciones previas — favorable para importadores.",br_r6:"<strong>Dificultad: Alta</strong> — mercado LATAM más complejo. Se recomienda entrada en Fase 2 (2027).",
+  ar_r1:"<strong>Disposición 4033/2025:</strong> Aprobación previa de importación para cosméticos eliminada — barrera importante removida desde 2025.",ar_r2:"Estándares MERCOSUR aplicados vía Disposición 8067/2024 — armonización regional en curso.",ar_r3:"Aún debe cumplir estándares de seguridad, etiquetado y regulaciones sanitarias locales.",ar_r4:"Etiquetado en español requerido. Lista de ingredientes INCI obligatoria.",ar_r5:"El principal riesgo es la volatilidad cambiaria (ARS/USD), no el cumplimiento regulatorio.",ar_r6:"<strong>Dificultad: Media</strong> — simplificada por desregulación 2025. Entrada en Fase 3 (2028).",
+  cl_r1:"Esmalte clasificado como <strong>Cosmético de Bajo Riesgo</strong> — la menor carga regulatoria en LATAM.",cl_r2:"ANAMED (bajo ISP) gestiona el proceso de notificación/registro — simplificado para productos de bajo riesgo.",cl_r3:"Etiquetado en español requerido. Reglas estándar de divulgación de ingredientes aplican.",cl_r4:"Chile tiene múltiples TLCs con China — condiciones arancelarias de importación favorables.",cl_r5:"Entorno regulatorio estable y transparente — el mercado más predecible para planificación de cumplimiento.",cl_r6:"<strong>Dificultad: Baja–Media</strong> — recomendado como mercado piloto secundario junto a México.",
+  fin_tag:"Proyecciones Financieras",fin_title:"Inversión y Retornos",fin_desc:"Proyecciones conservadoras basadas en operaciones de franquicia comparables en LATAM, ajustadas para condiciones del mercado mexicano y ventajas de costo directo de fábrica.",
+  fi1_h:"Unidad Simple — Ciudad de México",fi_inv:"Inversión Inicial",fi_size:"Tamaño del Salón",fi_seats:"Estaciones de Servicio",fi_rev:"Ingresos Anuales (Año 1)",fi_cogs:"Costo de Producto (COGS)",fi_labor:"Mano de Obra (60% comisión)",fi_rent:"Renta + Gastos Generales",fi_margin:"<strong>Margen Neto</strong>",
+  fi2_h:"Plan de Expansión 5 Años",fy1:"Año 1 — México (1 unidad)",fy2:"Año 2 — México (3 unidades)",fy3:"Año 3 — MX + Chile (6 unidades)",fy4:"Año 4 — Entrada Brasil (10 unidades)",fy5:"Año 5 — 20+ unidades LATAM",fi_fran:"Cuota de Franquicia (por unidad)",fi_roy:"Tasa de Regalías",fi_break:"<strong>Punto de Equilibrio</strong>",
+  ch3_title:"Proyección de Ingresos 5 Años por País (USD M)",
+  str_tag:"Estrategia de Entrada al Mercado",str_title:"México Primero — Luego LATAM",str_desc:"Una estrategia de entrada escalonada reduce el riesgo mientras construye brand equity y excelencia operacional antes de expandirse a mercados más complejos.",
+  ph1_tag:"Fase 1 · 2026",ph1_h:"Cabecera de Playa: México",ph1_p:"Abrir salón insignia en CDMX (Polanco o Santa Fe). Establecer cumplimiento COFEPRIS, cadena de suministro local e identidad de marca. Pilotear el menú completo de 3 sistemas.",
+  ph2_tag:"Fase 2 · 2027",ph2_h:"Escalar + Entrada a Chile",ph2_p:"Expandir a 5–8 ubicaciones en México. Entrar a Chile (vía bajo riesgo ISP). Establecer retail online de productos de uñas.",
+  ph3_tag:"Fase 3 · 2027–28",ph3_h:"Brasil + Argentina",ph3_p:"Entrar a Brasil (São Paulo) tras asegurar cumplimiento ANVISA. Entrada a Argentina tras estabilización cambiaria y proceso de notificación ANMAT.",
+  ph4_tag:"Fase 4 · 2029–30",ph4_h:"Red de Franquicias LATAM",ph4_p:"20+ unidades en 4 países. Expansión de línea de producto a retail (farmacias, e-commerce). Academia de entrenamiento regional establecida.",
+  tl_title:"Cronograma de Implementación",
+  tl1_d:"Q2 2026",tl1_h:"Constitución Legal + Registro COFEPRIS",tl1_p:"Establecer entidad mexicana, designar representante local, presentar Aviso de Operación. Asegurar primer envío de importación desde Guangzhou.",
+  tl2_d:"Q3 2026",tl2_h:"Lanzamiento Salón Insignia — CDMX",tl2_p:"Abrir primer salón Primavera. Contratar y capacitar personal en los 3 sistemas. Lanzar presencia de marca en redes sociales en español.",
+  tl3_d:"Q4 2026",tl3_h:"Formalización Modelo de Franquicia",tl3_p:"Documentar SOPs, materiales de capacitación, precios de productos. Firmar primeros 2–3 contratos de franquicia. Inicio trámite regulatorio Chile.",
+  tl4_d:"Q1–Q2 2027",tl4_h:"Escala México + Lanzamiento Chile",tl4_p:"5 ubicaciones México operativas. Primer salón Chile en Santiago. Inicio proceso de notificación ANVISA Brasil.",
+  tl5_d:"2028",tl5_h:"Entrada a Brasil + Argentina",tl5_p:"Primer salón brasileño en São Paulo. Piloto Argentina en Buenos Aires. Hub de distribución regional establecido en México.",
+  tl6_d:"2030",tl6_h:"20+ Locales · Red Completa LATAM",tl6_p:"Primavera se convierte en marca reconocida de nail salons premium en LATAM. Línea de producto en retail y online. Academia de franquicia operativa.",
+  cta_h:"¿Listo para Construir el Futuro de las Uñas en LATAM?",cta_p:"Primavera combina economía directa de fábrica, un portfolio de 1,500+ colores y una oportunidad de mercado de $2.4B. La ventana está abierta — actuemos.",cta_btn1:"Contáctenos para Asociarse →",cta_btn2:"Volver al Inicio ↑",
+  footer_copy:"© 2026 Primavera Nail Salon. Informe Comercial Confidencial. Datos de Grand View Research, IMARC Group, Technavio e investigación de mercado primaria.",
+  tech_label:"Innovación",tech_h:"Tecnología de Esmaltes",tech_sub:"Tres categorías de productos definen el mercado profesional de uñas actual.",tech1_badge:"Tradicional",tech1_h:"Sistema Gel UV/LED 3 Pasos",tech1_p1:"El estándar de la industria. Base, color gel y top coat curado bajo lámpara UV o LED. Dura 2-4 semanas.",tech2_badge:"Recomendado",tech2_h:"Gel Todo-en-Uno",tech2_p1:"Fórmula de nueva generación en un solo frasco. Reduce el tiempo de servicio en 30-40%.",tech3_badge:"🌿 Eco Premium",tech3_h:"Fórmulas Vegetales y Bio",tech3_p1:"Los polímeros bio-derivados forman un film <strong>flexible y transpirable</strong>, más suave en la lámina ungueal y con durabilidad de <strong>3–5 semanas</strong>. Los activos vegetales nutren activamente el lecho ungueal durante el uso.",spec_dur:"Durabilidad",spec_time:"Aplicación",spec_rem:"Remoción",spec_margin:"Margen",spec_dur1:"2-4 semanas",spec_time1:"45-60 min",spec_rem1:"Remojo en acetona",spec_margin1:"Alto",spec_dur2:"3-5 semanas",spec_time2:"25-35 min",spec_rem2:"Pelado o acetona",spec_margin2:"Muy alto",spec_dur3:"3-5 semanas",spec_time3:"30-45 min",spec_rem3:"Agua / pelado",spec_margin3:"Premium+",tech1_l1:"Fórmula profesional probada",tech1_l2:"Amplia gama de colores",tech1_l3:"Dominante en salones de México y Brasil",tech1_l4:"Requiere técnica capacitada",tech2_l1:"Mayor flujo = más clientes por día",tech2_l2:"Menos SKUs simplifica inventario",tech2_l3:"Capacitación más fácil",tech2_l4:"Línea principal Primavera",tech3_l1:"🌿 Bio-polímeros flexibles previenen el astillado más que el gel estándar",tech3_l2:"💅 Aceites vegetales nutren y fortalecen el lecho ungueal durante el uso",tech3_l3:"🔬 Cero compuestos tóxicos — no adelgaza ni daña la lámina",tech3_l4:"✨ Precio premium 20–35% superior al gel estándar",cmp_attr:"Atributo",cmp_price:"Precio retail / servicio",cmp_cogs:"Costo producto / servicio",cmp_skus:"SKUs requeridos",cmp_lamp:"Equipo necesario",cmp_lamp1:"Lámpara UV/LED",cmp_lamp2:"Lámpara LED",cmp_lamp3:"Ninguno / LED",cmp_cert:"Certificación fábrica China",cmp_yes:"✓ Disponible",cmp_req:"Registro requerido",cmp_fast:"Vía rápida",cmp_mx:"México COFEPRIS",prod_label:"Cadena de suministro",prod_h:"Productos y Fábrica",prod_sub:"Nuestro socio fabricante certificado FDA cubre las tres categorías tecnológicas.",factory_h:"Credenciales de Fábrica",fact1:"Registrado ante FDA EE.UU.",fact2:"ISO 22716 BPF",fact3:"SKUs activos",fact4:"MOQ 300 unidades/SKU",colors_h:"Colecciones de Color",colors_sub:"Frascos 12ml en gel opaco y jelly translúcido.",col_opaque:"Colección Opaca — 24 tonos",col_jelly:"Colección Jelly — 18 tonos",chain_h:"Cadena de Suministro",chain1_t:"Fábrica China (FDA/ISO)",chain1_d:"Guangzhou — producción, QC, etiquetado bilingüe",chain2_t:"Exportación a Granel — Marítimo",chain2_d:"Contenedores FCL, CIF Manzanillo/Veracruz, 18-25 días",chain3_t:"Aduana + COFEPRIS",chain3_d:"Arancel 5-15%, notificación COFEPRIS 30-60 días",chain4_t:"Centro Distribución CDMX",chain4_d:"Bodega central → franquicias, entrega 2-3 días",chain5_t:"Salones Franquicia Primavera",chain5_d:"Formato express 25-40m² en plazas y lifestyle centers",swot_label:"Análisis",swot_h:"Análisis FODA",swot_sub:"Evaluación estratégica de Primavera para el mercado de franquicias de uñas en LATAM.",swot_s:"Fortalezas",swot_w:"Debilidades",swot_o:"Oportunidades",swot_t:"Amenazas",s1:"Acceso directo a fábrica FDA = 40-60% menor costo de mercancía",s2:"Fórmula todo-en-uno reduce tiempo y complejidad",s3:"'Primavera' resuena naturalmente en mercados hispanohablantes",s4:"Cadena de suministro verticalmente controlada",s5:"Escalabilidad multi-formato",w1:"Sin reconocimiento de marca en LATAM",w2:"Registros regulatorios requieren 3-6 meses adicionales",w3:"Necesidad de infraestructura local de capacitación",w4:"Fuente única de manufactura = riesgo de concentración",w5:"Volatilidad cambiaria afecta costos de importación",o1:"Mercado LATAM creciendo 6.8% CAGR hasta 2028",o2:"Solo 12% de penetración de franquicias organizadas",o3:"Gasto en autocuidado de clase media en ascenso",o4:"Segmento vegetal crece 18% anual",o5:"Expansión de plazas crea espacios accesibles",t1:"Cadenas globales (OPI, Essie) entrando a LATAM",t2:"Productos falsos chinos dañan reputación",t3:"Cambios en aranceles de importación",t4:"Informalidad laboral con precios bajos",t5:"Regulación de ingredientes más estricta",reg_label:"Cumplimiento",reg_h:"Panorama Regulatorio",reg_sub:"Cada mercado tiene requisitos distintos. Planea 3-6 meses de anticipación.",reg_type:"Clasificación",reg_timeline:"Plazo",reg_tariff:"Arancel",reg_label2:"Etiquetado",reg_restrict:"Restricciones",reg_mx_h:"México",reg_mx_auth:"COFEPRIS (SSA)",reg_mx_class:"Notificación Cosmética",reg_mx_time:"30-90 días",reg_mx_label:"Español, ingredientes, importador",reg_mx_restrict:"Prohibido: formaldehído >0.2%, tolueno, DBP",reg_mx_tip:"Fórmulas vegetales: notificación simplificada. Mercado prioritario.",reg_br_h:"Brasil",reg_br_auth:"ANVISA (RDC 07/2015)",reg_br_class:"Notificación Grado 1",reg_br_time:"30 días + marca INPI",reg_br_label:"Portugués obligatorio, conformidad INMETRO",reg_br_restrict:"Cumplir Resolución Mercosur GMC 06/11",reg_br_tip:"Mayor carga fiscal. Manufactura local en Fase 2.",reg_ar_h:"Argentina",reg_ar_auth:"ANMAT (Disposición 2819/04)",reg_ar_class:"Autorización Cosmética",reg_ar_time:"60-180 días",reg_ar_label:"Español, número ANMAT requerido",reg_ar_restrict:"Controles cambiarios pueden afectar pagos",reg_ar_tip:"Riesgo de flujo de caja por controles cambiarios. Entrada en Fase 3.",reg_cl_h:"Chile",reg_cl_auth:"ISP",reg_cl_class:"Notificación Cosmética (RS)",reg_cl_time:"30-60 días",reg_cl_label:"Español, origen, contenido neto",reg_cl_restrict:"Lista prohibida EU 1223/2009",reg_cl_tip:"Arancel 0% TLC China-Chile. Ambiente más fácil. Objetivo Fase 2.",fin_label:"Finanzas",fin_h:"Economía de Unidad y Modelo Financiero",fin_sub:"Unidad express (30m², 3 técnicas, 8hr/día) en mall ciudad tier-1 México.",fin_unit_h:"P&L por Unidad (Mensual, USD)",fin_item:"Concepto",fin_conservative:"Conservador",fin_base:"Caso Base",fin_optimistic:"Optimista",fin_revenue:"Ingresos",fin_cogs:"Costo Producto (12%)",fin_labor:"Mano de obra (3 técnicas)",fin_rent:"Renta + CAM",fin_royalty:"Regalía (6%)",fin_other:"Otros gastos",fin_ebitda:"EBITDA",fin_margin:"Margen EBITDA",fin_inv_h:"Resumen de Inversión",fin_cost_item:"Concepto",fin_range:"Rango (USD)",inv1:"Cuota de franquicia",inv2:"Acondicionamiento y mobiliario",inv3:"Equipo (lámparas LED)",inv4:"Inventario inicial",inv5:"Capital de trabajo (3 meses)",inv_total:"Inversión Total",inv_payback:"Período de recuperación",inv_payback_val:"18-30 meses (caso base)",inv_roi:"ROI a 5 años",inv_roi_val:"140-220%",fin_chart1_h:"Proyección Ingresos Mensuales (Año 1)",fin_chart2_h:"Crecimiento de Red 5 Años",strat_label:"Hoja de Ruta",strat_h:"Estrategia de Mercado y Cronograma",strat_sub:"Enfoque por fases: México primero, luego expansión LATAM en 5 años.",tl1_period:"Meses 1-6",tl1_h:"Fase 1 — Fundación",tl1_1:"Registrar marca en MX, BR, CL, AR",tl1_2:"Notificación COFEPRIS para 40 SKUs core",tl1_3:"Negociar producción: 5,000 unidades/SKU",tl1_4:"Diseñar concepto de salón y manual de franquicia",tl1_5:"Identificar ubicación piloto en CDMX",tl2_period:"Meses 7-18",tl2_h:"Fase 2 — Piloto México",tl2_1:"Abrir 3 salones piloto propios en CDMX",tl2_2:"Lanzar prospecto e iniciar reclutamiento",tl2_3:"Centro de distribución CDMX (3PL)",tl2_4:"Marketing digital: Instagram, TikTok",tl2_5:"Validar economía de unidad y ajustar modelo",tl3_period:"Meses 19-36",tl3_h:"Fase 3 — Escalar México + Chile",tl3_1:"Escalar a 25+ unidades en México",tl3_2:"Piloto Chile en Santiago (arancel 0%)",tl3_3:"Línea retail: kits DIY en farmacias",tl3_4:"Iniciar notificación ANVISA Brasil",tl3_5:"Academia de capacitación regional",tl4_period:"Año 4-5",tl4_h:"Fase 4 — Expansión LATAM",tl4_1:"Entrada Brasil: São Paulo y Río",tl4_2:"Evaluación Argentina según macro",tl4_3:"100+ unidades en 4 países",tl4_4:"Lanzar Primavera Pro mayorista",tl4_5:"Explorar modelo maestro para Brasil",cta_h:"¿Listo para Crecer con Primavera?",cta_p:"Únete a la franquicia de uñas más emocionante de América Latina. Acceso directo a fábrica y marca para el mercado.",cta_btn1:"Solicitar Info de Franquicia",cta_btn2:"Ver Datos de Mercado",footer_tag:"Belleza Primaveral · Calidad del Origen al Salón",
+  calc_label:"Herramienta interactiva",
+  calc_h:"¿Cuánto puedes ganar con Primavera? 💰",
+  calc_sub:"Ajusta los controles para tu situación real y ve en segundos tu ingreso mensual estimado, costos desglosados y la ventaja financiera de trabajar con nuestra cadena directa de fábrica.",
+  calc_adv1_t:"Costo de producto más bajo del mercado",
+  calc_adv1_d:"Fábrica directa FDA en China — 12% del ingreso vs. 22–28% con marcas genéricas",
+  calc_adv2_t:"Marketing 100% incluido",
+  calc_adv2_d:"Campañas digitales, lanzamientos de temporada y contenido listo para usar — sin costo extra",
+  calc_adv3_t:"Marca en evolución constante",
+  calc_adv3_d:"Colecciones nuevas cada temporada, tendencias LATAM investigadas para ti",
+  calc_panel_t:"🎛️ Configura tu negocio",
+  calc_tier_label:"Tipo de local",
+  calc_tier_kiosk:"Kiosco Express<br><small>15–25 m²</small>",
+  calc_tier_studio:"Estudio<br><small>25–40 m²</small>",
+  calc_tier_salon:"Salón completo<br><small>40–70 m²</small>",
+  calc_clients_l:"Clientas por día",
+  calc_ticket_l:"Precio promedio por servicio",
+  calc_days_l:"Días trabajados al mes",
+  calc_rent_l:"Renta mensual del local",
+  calc_staff_l:"Número de técnicas (además de ti)",
+  calc_staff_min:"Solo yo",
+  calc_staff_max:"5 técnicas",
+  calc_salary_l:"Sueldo por técnica / mes",
+  calc_overhead_l:"Gastos fijos adicionales (luz, agua, internet…)",
+  calc_toggle_t:"Precio Primavera (12% del ingreso)",
+  calc_toggle_s:"Desactiva para ver con proveedor genérico (22%)",
+  calc_rev_label:"Ingreso mensual estimado",
+  calc_profit_label:"Ganancia neta mensual",
+  calc_margin_label:"Margen",
+  calc_annual_label:"Anual estimado",
+  calc_th_item:"Concepto",
+  calc_th_monthly:"Mensual",
+  calc_th_pct:"% del ingreso",
+  calc_row_prod:"💅 Costo de productos",
+  calc_row_rent:"🏷️ Renta del local",
+  calc_row_labor:"👩 Nómina (técnicas)",
+  calc_row_overhead:"🔌 Gastos generales",
+  calc_row_royalty:"🤝 Royalty Primavera (6%)",
+  calc_row_net:"✅ Ganancia neta",
+  calc_sav_title:"Ventaja Primavera este mes",
+  calc_sav_desc:"Con nuestro precio de fábrica directa ahorras <strong id=\"rSavings\" style=\"color:var(--rose-d)\">$0</strong> MXN al mes en productos vs. proveedor genérico — eso es <strong id=\"rSavingsAnnual\" style=\"color:var(--rose-d)\">$0</strong> MXN al año que se quedan en tu bolsillo.",
+  calc_sav_desc2:"Además: <em>marketing incluido, colecciones nuevas cada temporada, capacitación continua, y una marca que crece contigo.</em>",
+  calc_payback_l:"Recuperación estimada de inversión",
+  calc_invest_l:"Inversión inicial estimada",
+  calc_months:" meses",
+  calc_adjust:"Ajusta los números",
+  calc_rev_sub_unit:"MXN al mes",
+  calc_chart_prod:"Productos",calc_chart_rent:"Renta",calc_chart_labor:"Nómina",calc_chart_overhead:"Gastos gen.",calc_chart_royalty:"Royalty",calc_chart_profit:"Ganancia",
+  calc_cta_p:"¿Estas cifras te emocionan? Da el siguiente paso y habla con nuestro equipo.",
+  calc_cta_btn:"Quiero ser franquiciada Primavera 🌸",
+},
+pt:{
+  nav_market:"Mercado",nav_countries:"Países",nav_franchise:"Franquia",
+    nav_startup:"📋 Guia Startup",nav_tech:"Tecnologia",nav_swot:"SWOT",nav_regs:"Regulações",nav_fin:"Financeiro",
+  hero_tag:"Relatório de Inteligência Empresarial · Abril 2026",hero_title:"Relatório de Franquia<br>Nail Salon LATAM",hero_sub:"Análise de Mercado · Estratégia · Oportunidade · Regulações",hero_btn1:"Explorar o Mercado ↓",hero_btn2:"Ver Análise SWOT",hero_scroll:"Role para explorar",
+  sum_tag:"Resumo Executivo",sum_title:"A Oportunidade em Números",sum_desc:"A indústria de nail salons na LATAM é um dos segmentos de beleza de crescimento mais rápido globalmente, impulsionado pela urbanização, aumento da renda disponível e expansão da força de trabalho feminina.",
+  m1:"Mercado LATAM 2023",m2:"CAGR Anual 2024–2030",m3:"Mercado Projetado 2030",m4:"Margens Máximas de Franquia",m5:"Participação Global",m6:"Cores no Portfólio",
+  mkt_tag:"Visão Geral do Mercado LATAM",mkt_title:"Um Mercado em Ascensão",mkt_desc:"A América Latina representa 11,2% do mercado global de nail salons — crescendo quase o dobro da média mundial, com Brasil e México liderando a expansão.",
+  ch1_title:"Tamanho do Mercado por País (2023, USD M)",ch2_title:"Previsão de Crescimento LATAM (USD Bilhões)",
+  drv_tag:"Motor de Crescimento",drv1_h:"Urbanização",drv1_p:"O rápido crescimento da população urbana no Brasil, México e Colômbia impulsiona o tráfego para serviços de beleza.",drv2_h:"Renda em Alta",drv2_p:"Classe média em expansão com gasto discricionário crescente em cuidados pessoais.",drv3_h:"Boom do Gel UV",drv3_p:"Extensões e overlays de gel UV são o segmento de serviço de crescimento mais rápido — exatamente nossa oferta central.",drv4_h:"Força de Trabalho Feminina",drv4_p:"Recorde na participação feminina no mercado de trabalho da LATAM impulsiona a demanda por cuidados profissionais de unhas.",
+  cty_tag:"Análise por País",cty_title:"Principais Mercados LATAM",cty_desc:"Quatro mercados prioritários, cada um com dinâmicas distintas, marcos regulatórios e oportunidades de entrada.",
+  tab_mx:"🇲🇽 México",tab_br:"🇧🇷 Brasil",tab_ar:"🇦🇷 Argentina",tab_cl:"🇨🇱 Chile",
+  cs_mktsize:"Tamanho do Mercado 2023",cs_share:"Participação LATAM",cs_cagr:"CAGR Projetado",cs_pop:"População",cs_reg:"Regulador",cs_entry:"Dificuldade de Entrada",
+  mx_h:"México — Mercado de Entrada Prioritário",mx_why:"Por Que México Primeiro?",mx_p1:"O México é nosso mercado de entrada. A proximidade com nossa cadeia de suprimentos chinesa, uma grande classe média urbana e uma cultura de beleza próspera o tornam ideal para o primeiro lançamento de franquia.",mx_p2:"Cidade do México, Guadalajara e Monterrey são mercados de elite para nail salons com forte demanda por serviços de gel premium. O nome 'Primavera' ressoa naturalmente em espanhol.",mx_p3:"COFEPRIS não exige registro pré-mercado — apenas um Aviso de Operação, tornando a importação mais rápida do que no Brasil ou Argentina.",
+  br_h:"Brasil — Maior Crescimento",br_why:"Destaques do Mercado Brasileiro",br_p1:"O Brasil é o maior mercado de nail salons da LATAM e registra o maior CAGR da região. Os brasileiros estão entre os maiores consumidores per capita de serviços de beleza do mundo.",br_p2:"São Paulo, Rio de Janeiro e Belo Horizonte oferecem enormes oportunidades de franquia. O mercado favorece marcas premium e eco-conscientes — alinhando-se perfeitamente com a linha bio-based da Primavera.",br_p3:"ANVISA classifica esmalte como Grau I (apenas notificação). RDC 907/2024 rege todos os cosméticos. Rotulagem em português e nomenclatura INCI são obrigatórias.",
+  ar_h:"Argentina — Oportunidade Emergente",ar_why:"Destaques do Mercado Argentino",ar_p1:"A Argentina tem uma vibrante cultura de beleza centrada em Buenos Aires. O mercado é sensível ao preço devido à volatilidade econômica, mas os consumidores mantêm lealdade às experiências de salão premium.",ar_p2:"ANMAT atualizou regulamentações em 2024–2025: Disposição 8067/2024 alinha com padrões MERCOSUL, e Disposição 4033/2025 eliminou aprovação prévia de importação para cosméticos.",ar_p3:"O risco cambial é o principal desafio. Um modelo de franquia com flexibilidade de preços local é essencial para operações sustentáveis.",
+  cl_h:"Chile — Mercado Premium",cl_why:"Destaques do Mercado Chileno",cl_p1:"O Chile tem o maior PIB per capita da LATAM e um ambiente regulatório estável e transparente. A base consumidora abastada de Santiago mostra forte apetite por experiências de salão premium.",cl_p2:"ISP/ANAMED classifica esmalte como Cosmético de Baixo Risco — o menor ônus regulatório dos quatro mercados-alvo. Isso torna o Chile um atraente mercado-piloto secundário após o México.",cl_p3:"O posicionamento eco-luxo da linha plant-based da Primavera se alinha com a crescente consciência ambiental dos consumidores chilenos.",
+  fr_tag:"Modelos de Franquia",fr_title:"Panorama Competitivo",fr_desc:"Compreender o cenário competitivo ajuda a posicionar a vantagem única da Primavera: preços diretos de fábrica, produtos aprovados pela FDA e mais de 1.500 cores.",
+  ft_brand:"Marca",ft_origin:"Origem",ft_invest:"Faixa de Investimento",ft_seg:"Segmento",ft_latam:"Presença LATAM",ft_model:"Modelo",ft_m1:"Franquia completa",ft_m2:"Franquia + Corp.",ft_m3:"Franquia (varejo)",ft_m4:"Franquia quiosque",ft_m5:"Modelo assinatura",ft_m6:"Franquia direto de fábrica",
+  adv_tag:"Vantagem Primavera",adv1_h:"Vantagem de Custo Direto de Fábrica",adv1_p:"Acesso direto à fábrica de Guangzhou elimina intermediários, entregando custos de produto 30–50% menores vs. concorrentes que usam distribuidores.",adv2_h:"Janela de Mercado Inexplorada",adv2_p:"A maioria das redes estabelecidas tem presença mínima na LATAM. A Primavera pode capturar vantagem de primeiro movimento no México, Chile e cidades secundárias do Brasil.",adv3_h:"Ressonância Natural de Marca",adv3_p:"'Primavera' transmite naturalmente frescor e natureza em espanhol e português — uma vantagem de brand equity incorporada nos mercados-alvo.",
+  tech_tag:"Tecnologia de Produto",tech_title:"Inovação em Esmaltes",tech_desc:"Compreender a tecnologia de produto é fundamental para o design de serviços do salão, estratégia de preços e sourcing. Oferecemos os três principais sistemas.",
+  t1_h:"Sistema de Gel Tradicional 3 Passos",t1_s1h:"Base Coat",t1_s1p:"Prepara a unha, melhora a adesão e protege a placa ungueal de manchas.",t1_s2h:"Gel de Cor (×2 camadas)",t1_s2p:"Gel pigmentado curado com UV/LED em duas camadas finas. Cada camada cura em 30–60 seg.",t1_s3h:"Top Coat / Selante",t1_s3p:"Sela a cor, adiciona brilho e durabilidade. Cura final UV/LED de 60 seg.",t1_dur:"⏱ Dura 2–3 semanas · Requer lâmpada UV/LED · Padrão da indústria",t1_badge:"Padrão Ouro · Alta Durabilidade",
+  t2_h:"Sistema de Gel Tudo-em-Um",t2_s1h:"Aplicação em Um Único Frasco",t2_s1p:"Base + cor + top coat combinados em uma fórmula. Sem camadas separadas.",t2_s2h:"Cura UV/LED (ou Luz Solar)",t2_s2p:"Algumas fórmulas curam com luz solar direta — sem necessidade de lâmpada.",t2_s3h:"Sem Camada Pegajosa",t2_s3p:"Fórmulas avançadas sem camada inibidora, eliminando a necessidade de limpeza com álcool isopropílico.",t2_dur:"⏱ Serviço de 15–20 min · Dura 1–2 semanas · 40% mais rápido",t2_badge:"Economia de Tempo · Serviços Express",
+  t3_h:"Base Vegetal e Bio-Based",t3_s1h:"Polímeros de Origem Vegetal",t3_s1p:"Derivados de óleos vegetais (soja, mamona), ácido cítrico e amido de mandioca — até 84% bio-sourced.",t3_s2h:"Fórmula 25-Livre",t3_s2p:"Livre de 25+ químicos tóxicos incluindo formaldeído, tolueno, DBP, cânfora e TPHP.",t3_s3h:"Fórmula Respirável",t3_s3p:"Permite a passagem de água e oxigênio pelo revestimento — mais saudável para a integridade da placa ungueal.",t3_dur:"🌎 Vegano · Sem crueldade · Consumidores eco-conscientes",t3_badge:"Crescimento Futuro · Eco Premium",
+  prod_tag:"Nossa Fábrica · Guangzhou, China",prod_title:"Portfólio de Produto Direto de Fábrica",prod_desc:"Acesso direto a uma fábrica de esmaltes aprovada pela FDA em Guangzhou — o principal hub de manufatura de nail care do mundo. Pedidos em volume, rotulagem personalizada e embalagem pronta para exportação.",
+  pf1:"Fábrica Guangzhou",pf2:"Produtos Aprovados FDA",pf3:"Cores Disponíveis",pf4:"Preços por Volume",
+  col1_h:"Coleção 1: Série Opaca e Cremosa",col1_p:"500+ cores ricas e opacas — vermelhos, nudes, pastéis, vibrantes e tons profundos. Alta pigmentação, cobertura em uma camada.",col2_h:"Coleção 2: Série H · Jelly e Transparente (1.045 cores)",col2_p:"1.045 cores de gel semitransparente tipo jelly e acabamento glass. Perfeito para degradê, sobreposições e nail art estilo coreano.",col2_note:"Exibindo cores representativas — catálogo completo H0001–H1045 disponível sob consulta",
+  sc_title:"Cadeia de Suprimentos: China → LATAM",sc1_h:"Fábrica Guangzhou",sc1_p:"Produção aprovada FDA",sc2_h:"Controle de Qualidade",sc2_p:"Testes lab + certificação",sc3_h:"Exportação em Volume",sc3_p:"Rotulagem Primavera",sc4_h:"Importação para México",sc4_p:"Conforme COFEPRIS",sc5_h:"Salões Franquia",sc5_p:"Distribuição LATAM",
+  swot_tag:"Análise Estratégica",swot_title:"Análise SWOT",swot_desc:"Uma avaliação abrangente da posição da Primavera no mercado de franquias de nail salons na LATAM.",sw_s:"Forças",sw_s_h:"Vantagens Internas",sw_w:"Fraquezas",sw_w_h:"Desafios Internos",sw_o:"Oportunidades",sw_o_h:"Oportunidades de Mercado",sw_t:"Ameaças",sw_t_h:"Riscos Externos",
+  ss1:"Acesso direto à fábrica aprovada FDA em Guangzhou",ss2:"Custos de produto 30–50% menores que distribuidores",ss3:"Portfólio de 1.500+ cores — o mais amplo da categoria",ss4:"Nome 'Primavera' ressoa naturalmente em espanhol e português",ss5:"Todos os três sistemas de unhas: tradicional, tudo-em-um, bio-based",ss6:"Framework de franquia comprovado baseado em comparáveis globais",
+  sw1:"Marca nova — sem reconhecimento estabelecido na LATAM ainda",sw2:"Complexidade de conformidade regulatória em múltiplos países",sw3:"Alto investimento inicial de franquia ($120K–$280K)",sw4:"Dependência da cadeia de suprimentos em fábrica chinesa única",sw5:"Requisitos de localização linguística e cultural",sw6:"Risco cambial em múltiplos mercados LATAM",
+  so1:"Mercado LATAM crescendo a CAGR de 8,6% até 2030",so2:"Gel UV é a categoria de serviço de crescimento mais rápido",so3:"A maioria das redes globais tem presença mínima na LATAM",so4:"Consciência eco crescente impulsiona demanda por produtos plant-based",so5:"Brasil: maior CAGR regional (~10%), cidades secundárias pouco atendidas",so6:"Desregulação de importação da Argentina em 2025 reduz barreiras",
+  st1:"Redes de salões locais estabelecidas com clientes fiéis",st2:"Volatilidade cambial argentina e instabilidade econômica",st3:"Mudanças regulatórias em COFEPRIS / ANVISA / ANMAT",st4:"Marcas de esmalte locais de baixo custo concorrendo no varejo",st5:"Franquias globais (NBAR, MiniLuxe) expandindo na LATAM",st6:"Risco de interrupção da cadeia de suprimentos chinesa",
+  reg_tag:"Marco Regulatório",reg_title:"Conformidade por País",reg_desc:"Cada mercado LATAM tem um órgão regulador e processo distinto para importar e vender cosméticos para unhas.",
+  mx_r1:"Não é necessário registro pré-mercado para cosméticos de unhas — entrada no mercado significativamente mais rápida.",mx_r2:"Aviso de Operação apresentado online via plataforma DIGIPRIS antes da comercialização.",mx_r3:"Representante mexicano local (pessoa física ou jurídica) obrigatório — assume responsabilidade regulatória.",mx_r4:"Rotulagem em espanhol obrigatória: nome do produto, fabricante, ingredientes, instruções, advertências.",mx_r5:"Substâncias proibidas: chumbo, mercúrio, certos parabenos. Nossas fórmulas aprovadas pela FDA estão em conformidade.",mx_r6:"<strong>Dificuldade: Média</strong> — direto para produtos com certificação FDA e representante local.",
+  br_r1:"Esmalte classificado como <strong>Grau I</strong> (baixo risco) — apenas notificação, não registro completo. ~97% dos cosméticos seguem esta via.",br_r2:"Importador requer Autorização para Funcionamento (AF) conforme RDC 16/2014. Atualizado sob RDC 907/2024.",br_r3:"Rotulagem em português obrigatória. Nomenclatura INCI obrigatória para todos os ingredientes.",br_r4:"Produtos devem estar livres de microrganismos prejudiciais. Dados de segurança necessários.",br_r5:"Atualização 2024 (RDC 907) consolidou e simplificou regulamentações anteriores — favorável para importadores.",br_r6:"<strong>Dificuldade: Alta</strong> — mercado LATAM mais complexo. Recomenda-se entrada na Fase 2 (2027).",
+  ar_r1:"<strong>Disposición 4033/2025:</strong> Aprovação prévia de importação para cosméticos eliminada — barreira importante removida em 2025.",ar_r2:"Padrões MERCOSUL aplicados via Disposición 8067/2024 — harmonização regional em andamento.",ar_r3:"Ainda deve cumprir padrões de segurança, rotulagem e regulamentações sanitárias locais.",ar_r4:"Rotulagem em espanhol obrigatória. Lista de ingredientes INCI obrigatória.",ar_r5:"O principal risco é a volatilidade cambial (ARS/USD), não a conformidade regulatória.",ar_r6:"<strong>Dificuldade: Média</strong> — simplificada pela desregulação de 2025. Entrada na Fase 3 (2028).",
+  cl_r1:"Esmalte classificado como <strong>Cosmético de Baixo Risco</strong> — menor ônus regulatório na LATAM.",cl_r2:"ANAMED (sob ISP) gerencia o processo de notificação/registro — simplificado para produtos de baixo risco.",cl_r3:"Rotulagem em espanhol obrigatória. Regras padrão de divulgação de ingredientes aplicam-se.",cl_r4:"Chile tem múltiplos acordos de livre comércio com China — condições tarifárias de importação favoráveis.",cl_r5:"Ambiente regulatório estável e transparente — mercado mais previsível para planejamento de conformidade.",cl_r6:"<strong>Dificuldade: Baixa–Média</strong> — recomendado como mercado-piloto secundário junto ao México.",
+  fin_tag:"Projeções Financeiras",fin_title:"Investimento e Retornos",fin_desc:"Projeções conservadoras baseadas em operações de franquia comparáveis na LATAM, ajustadas para condições do mercado mexicano e vantagens de custo direto de fábrica.",
+  fi1_h:"Unidade Simples — Cidade do México",fi_inv:"Investimento Inicial",fi_size:"Tamanho do Salão",fi_seats:"Estações de Serviço",fi_rev:"Receita Anual (Ano 1)",fi_cogs:"Custo de Produto (COGS)",fi_labor:"Mão de Obra (60% comissão)",fi_rent:"Aluguel + Despesas Gerais",fi_margin:"<strong>Margem Líquida</strong>",
+  fi2_h:"Plano de Expansão 5 Anos",fy1:"Ano 1 — México (1 unidade)",fy2:"Ano 2 — México (3 unidades)",fy3:"Ano 3 — MX + Chile (6 unidades)",fy4:"Ano 4 — Entrada Brasil (10 unidades)",fy5:"Ano 5 — 20+ unidades LATAM",fi_fran:"Taxa de Franquia (por unidade)",fi_roy:"Taxa de Royalties",fi_break:"<strong>Ponto de Equilíbrio</strong>",
+  ch3_title:"Projeção de Receita 5 Anos por País (USD M)",
+  str_tag:"Estratégia de Entrada no Mercado",str_title:"México Primeiro — Depois LATAM",str_desc:"Uma estratégia de entrada faseada reduz o risco enquanto constrói brand equity e excelência operacional antes de expandir para mercados mais complexos.",
+  ph1_tag:"Fase 1 · 2026",ph1_h:"Cabeça de Praia: México",ph1_p:"Abrir salão flagship na CDMX (Polanco ou Santa Fe). Estabelecer conformidade COFEPRIS, cadeia de suprimentos local e identidade de marca. Pilotar o menu completo de 3 sistemas.",
+  ph2_tag:"Fase 2 · 2027",ph2_h:"Escalar + Entrada no Chile",ph2_p:"Expandir para 5–8 locais no México. Entrar no Chile (via baixo risco ISP). Estabelecer varejo online de produtos para unhas.",
+  ph3_tag:"Fase 3 · 2027–28",ph3_h:"Brasil + Argentina",ph3_p:"Entrar no Brasil (São Paulo) após garantir conformidade ANVISA. Entrada na Argentina após estabilização cambial e processo de notificação ANMAT.",
+  ph4_tag:"Fase 4 · 2029–30",ph4_h:"Rede de Franquias LATAM",ph4_p:"20+ unidades em 4 países. Expansão da linha de produto para varejo (farmácias, e-commerce). Academia de treinamento regional estabelecida.",
+  tl_title:"Cronograma de Implementação",
+  tl1_d:"Q2 2026",tl1_h:"Constituição Legal + Registro COFEPRIS",tl1_p:"Estabelecer entidade mexicana, designar representante local, apresentar Aviso de Operação. Garantir primeira remessa de importação de Guangzhou.",
+  tl2_d:"Q3 2026",tl2_h:"Lançamento Salão Flagship — CDMX",tl2_p:"Abrir primeiro salão Primavera. Contratar e treinar equipe nos 3 sistemas. Lançar presença de marca nas redes sociais em espanhol.",
+  tl3_d:"Q4 2026",tl3_h:"Formalização Modelo de Franquia",tl3_p:"Documentar SOPs, materiais de treinamento, preços de produtos. Assinar primeiros 2–3 contratos de franquia. Início do processo regulatório do Chile.",
+  tl4_d:"Q1–Q2 2027",tl4_h:"Escala México + Lançamento Chile",tl4_p:"5 locais no México operacionais. Primeiro salão Chile em Santiago. Início do processo de notificação ANVISA Brasil.",
+  tl5_d:"2028",tl5_h:"Entrada no Brasil + Argentina",tl5_p:"Primeiro salão brasileiro em São Paulo. Piloto Argentina em Buenos Aires. Hub de distribuição regional estabelecido no México.",
+  tl6_d:"2030",tl6_h:"20+ Locais · Rede Completa LATAM",tl6_p:"Primavera torna-se uma marca reconhecida de nail salons premium na LATAM. Linha de produto no varejo e online. Academia de franquia operacional.",
+  cta_h:"Pronto para Construir o Futuro das Unhas na LATAM?",cta_p:"A Primavera combina economia direta de fábrica, portfólio de 1.500+ cores e uma oportunidade de mercado de $2,4B. A janela está aberta — vamos agir.",cta_btn1:"Entre em Contato para Parceria →",cta_btn2:"Voltar ao Topo ↑",
+  footer_copy:"© 2026 Primavera Nail Salon. Relatório Comercial Confidencial. Dados de Grand View Research, IMARC Group, Technavio e pesquisa de mercado primária.",
+  tech_label:"Inovação",tech_h:"Tecnologia de Esmaltes",tech_sub:"Três categorias de produtos definem o mercado profissional de unhas atual.",tech1_badge:"Tradicional",tech1_h:"Sistema Gel UV/LED 3 Passos",tech1_p1:"O padrão da indústria. Base, cor em gel e top coat curados sob lâmpada UV ou LED. Dura 2-4 semanas.",tech2_badge:"Recomendado",tech2_h:"Gel Tudo-em-Um",tech2_p1:"Fórmula de nova geração em frasco único. Reduz o tempo de serviço em 30-40%.",tech3_badge:"🌿 Eco Premium",tech3_h:"Fórmulas Vegetais e Bio",tech3_p1:"Os polímeros bio-derivados formam um filme <strong>flexível e respirável</strong>, mais suave na lâmina ungueal com durabilidade de <strong>3–5 semanas</strong>. Os ativos vegetais nutrem ativamente o leito ungueal durante o uso.",spec_dur:"Durabilidade",spec_time:"Aplicação",spec_rem:"Remoção",spec_margin:"Margem",spec_dur1:"2-4 semanas",spec_time1:"45-60 min",spec_rem1:"Imersão em acetona",spec_margin1:"Alta",spec_dur2:"3-5 semanas",spec_time2:"25-35 min",spec_rem2:"Descolar ou acetona",spec_margin2:"Muito Alta",spec_dur3:"3-5 semanas",spec_time3:"30-45 min",spec_rem3:"Água / descolar",spec_margin3:"Premium+",tech1_l1:"Fórmula profissional comprovada",tech1_l2:"Ampla gama de cores",tech1_l3:"Dominante em salões do México e Brasil",tech1_l4:"Requer profissional treinada",tech2_l1:"Maior fluxo = mais clientes por dia",tech2_l2:"Menos SKUs simplifica estoque",tech2_l3:"Treinamento mais fácil",tech2_l4:"Linha principal Primavera",tech3_l1:"🌿 Bio-polímeros flexíveis previnem lascamento mais que gel padrão",tech3_l2:"💅 Óleos vegetais nutrem e fortalecem o leito ungueal durante o uso",tech3_l3:"🔬 Zero compostos tóxicos — sem adelgaçamento da lâmina",tech3_l4:"✨ Preço premium 20–35% superior ao gel padrão",cmp_attr:"Atributo",cmp_price:"Preço varejo / serviço",cmp_cogs:"Custo produto / serviço",cmp_skus:"SKUs necessários",cmp_lamp:"Equipamento necessário",cmp_lamp1:"Lâmpada UV/LED",cmp_lamp2:"Lâmpada LED",cmp_lamp3:"Nenhum / LED",cmp_cert:"Certificação fábrica China",cmp_yes:"✓ Disponível",cmp_req:"Registro necessário",cmp_fast:"Trâmite rápido",cmp_mx:"México COFEPRIS",prod_label:"Cadeia de Suprimentos",prod_h:"Produtos e Fábrica",prod_sub:"Nosso parceiro fabricante certificado pela FDA cobre as três categorias tecnológicas.",factory_h:"Credenciais da Fábrica",fact1:"Registrada na FDA dos EUA",fact2:"ISO 22716 BPF",fact3:"SKUs ativos",fact4:"MOQ 300 unidades/SKU",colors_h:"Coleções de Cores",colors_sub:"Frascos 12ml em gel opaco e jelly translúcido.",col_opaque:"Coleção Opaca — 24 tons",col_jelly:"Coleção Jelly — 18 tons",chain_h:"Cadeia de Suprimentos",chain1_t:"Fábrica China (FDA/ISO)",chain1_d:"Guangzhou — produção, CQ, rotulagem bilíngue",chain2_t:"Exportação a Granel — Marítimo",chain2_d:"Contêineres FCL, CIF Manzanillo/Veracruz, 18-25 dias",chain3_t:"Alfândega + COFEPRIS",chain3_d:"Tarifa 5-15%, notificação COFEPRIS 30-60 dias",chain4_t:"Hub Distribuição CDMX",chain4_d:"Armazém central → franquias, entrega 2-3 dias",chain5_t:"Salões Franquia Primavera",chain5_d:"Formato express 25-40m² em shoppings e lifestyle centers",swot_label:"Análise",swot_h:"Análise SWOT",swot_sub:"Avaliação estratégica da Primavera para o mercado de franquias de unhas na LATAM.",swot_s:"Forças",swot_w:"Fraquezas",swot_o:"Oportunidades",swot_t:"Ameaças",s1:"Acesso direto a fábrica FDA = 40-60% menor custo",s2:"Fórmula tudo-em-um reduz tempo e complexidade",s3:"'Primavera' ressoa naturalmente em mercados lusófonos e hispânicos",s4:"Cadeia de suprimentos verticalmente controlada",s5:"Escalabilidade multi-formato",w1:"Sem reconhecimento de marca na LATAM",w2:"Registros regulatórios adicionam 3-6 meses",w3:"Necessidade de infraestrutura local de treinamento",w4:"Fonte única = risco de concentração",w5:"Volatilidade cambial afeta custos",o1:"Mercado LATAM crescendo 6,8% CAGR até 2028",o2:"Apenas 12% de penetração de redes organizadas",o3:"Gasto com autocuidado da classe média crescendo",o4:"Segmento vegetal cresce 18% ao ano",o5:"Expansão de shoppings cria espaços acessíveis",t1:"Redes globais (OPI, Essie) entrando na LATAM",t2:"Produtos falsificados chineses prejudicam a categoria",t3:"Mudanças nos regimes tarifários",t4:"Informalidade trabalhista com preços baixos",t5:"Regulamentação de ingredientes mais rigorosa",reg_label:"Conformidade",reg_h:"Panorama Regulatório",reg_sub:"Cada mercado tem requisitos distintos. Planeje 3-6 meses de antecedência.",reg_type:"Classificação",reg_timeline:"Prazo",reg_tariff:"Tarifa",reg_label2:"Rotulagem",reg_restrict:"Restrições",reg_mx_h:"México",reg_mx_auth:"COFEPRIS (SSA)",reg_mx_class:"Notificação Cosmética",reg_mx_time:"30-90 dias",reg_mx_label:"Espanhol, ingredientes, importador",reg_mx_restrict:"Proibido: formaldeído >0,2%, tolueno, DBP",reg_mx_tip:"Fórmulas vegetais: notificação simplificada. Mercado prioritário.",reg_br_h:"Brasil",reg_br_auth:"ANVISA (RDC 07/2015)",reg_br_class:"Notificação Grau 1",reg_br_time:"30 dias e-notificação + INPI",reg_br_label:"Português obrigatório, conformidade INMETRO",reg_br_restrict:"Cumprir Resolução Mercosul GMC 06/11",reg_br_tip:"Maior carga tributária. Parceria local na Fase 2.",reg_ar_h:"Argentina",reg_ar_auth:"ANMAT (Disposição 2819/04)",reg_ar_class:"Autorização Cosmética",reg_ar_time:"60-180 dias",reg_ar_label:"Espanhol, número de aprovação ANMAT",reg_ar_restrict:"Controles cambiais podem impactar pagamentos",reg_ar_tip:"Risco de fluxo de caixa por controles cambiais. Entrada na Fase 3.",reg_cl_h:"Chile",reg_cl_auth:"ISP",reg_cl_class:"Notificação Cosmética (RS)",reg_cl_time:"30-60 dias",reg_cl_label:"Espanhol, origem, conteúdo líquido",reg_cl_restrict:"Lista proibida EU 1223/2009",reg_cl_tip:"Tarifa 0% TLC China-Chile. Ambiente mais fácil. Objetivo Fase 2.",fin_label:"Finanças",fin_h:"Economia de Unidade e Modelo Financeiro",fin_sub:"Unidade express (30m², 3 técnicas, 8hr/dia) em shopping cidade tier-1 México.",fin_unit_h:"DRE por Unidade (Mensal, USD)",fin_item:"Item",fin_conservative:"Conservador",fin_base:"Caso Base",fin_optimistic:"Otimista",fin_revenue:"Receita",fin_cogs:"Custo Produto (12%)",fin_labor:"Mão de obra (3 técnicas)",fin_rent:"Aluguel + CAM",fin_royalty:"Royalty (6%)",fin_other:"Outros OpEx",fin_ebitda:"EBITDA",fin_margin:"Margem EBITDA",fin_inv_h:"Resumo de Investimento",fin_cost_item:"Item de Custo",fin_range:"Faixa (USD)",inv1:"Taxa de franquia",inv2:"Reforma e mobiliário",inv3:"Equipamentos (lâmpadas LED)",inv4:"Estoque inicial",inv5:"Capital de giro (3 meses)",inv_total:"Investimento Total",inv_payback:"Prazo de retorno",inv_payback_val:"18-30 meses (caso base)",inv_roi:"ROI em 5 anos",inv_roi_val:"140-220%",fin_chart1_h:"Projeção Receita Mensal (Ano 1)",fin_chart2_h:"Crescimento da Rede 5 Anos",strat_label:"Roteiro",strat_h:"Estratégia de Entrada e Cronograma",strat_sub:"Abordagem em fases: México primeiro, depois expansão LATAM em 5 anos.",tl1_period:"Meses 1-6",tl1_h:"Fase 1 — Fundação",tl1_1:"Registrar marca no MX, BR, CL, AR",tl1_2:"Notificação COFEPRIS para 40 SKUs core",tl1_3:"Negociar produção: 5.000 unidades/SKU",tl1_4:"Projetar conceito flagship e manual de franquia",tl1_5:"Identificar local piloto na CDMX",tl2_period:"Meses 7-18",tl2_h:"Fase 2 — Piloto México",tl2_1:"Abrir 3 salões piloto próprios na CDMX",tl2_2:"Lançar prospecto e iniciar recrutamento",tl2_3:"Hub de distribuição CDMX (3PL)",tl2_4:"Marketing digital: Instagram, TikTok",tl2_5:"Validar economia de unidade e ajustar modelo",tl3_period:"Meses 19-36",tl3_h:"Fase 3 — Escalar México + Chile",tl3_1:"Escalar para 25+ unidades no México",tl3_2:"Piloto Chile em Santiago (tarifa 0%)",tl3_3:"Linha de varejo: kits DIY em farmácias",tl3_4:"Iniciar notificação ANVISA Brasil",tl3_5:"Academia de treinamento regional",tl4_period:"Ano 4-5",tl4_h:"Fase 4 — Expansão LATAM",tl4_1:"Entrada Brasil: São Paulo e Rio de Janeiro",tl4_2:"Avaliação Argentina conforme macro",tl4_3:"100+ unidades em 4 países",tl4_4:"Lançar Primavera Pro atacado",tl4_5:"Explorar modelo mestre para Brasil",cta_h:"Pronto para Crescer com a Primavera?",cta_p:"Junte-se à franquicia de unhas mais empolgante da América Latina. Acesso direto à fábrica e marca feita para o mercado.",cta_btn1:"Solicitar Info de Franquia",cta_btn2:"Ver Dados de Mercado",footer_tag:"Beleza Primaveril · Qualidade da Origem ao Salão",
+  calc_label:"Ferramenta interativa",
+  calc_h:"Quanto você pode ganhar com a Primavera? 💰",
+  calc_sub:"Ajuste os controles para a sua situação real e veja em segundos a sua receita mensal estimada, custos detalhados e a vantagem financeira de trabalhar com nossa cadeia de fornecimento direto da fábrica.",
+  calc_adv1_t:"Menor custo de produto do mercado",
+  calc_adv1_d:"Fábrica direta certificada pela FDA na China — 12% da receita vs. 22–28% com marcas genéricas",
+  calc_adv2_t:"Marketing 100% incluído",
+  calc_adv2_d:"Campanhas digitais, lançamentos sazonais e conteúdo pronto para uso — sem custo extra",
+  calc_adv3_t:"Marca em evolução constante",
+  calc_adv3_d:"Novas coleções a cada temporada, tendências LATAM pesquisadas para você",
+  calc_panel_t:"🎛️ Configure seu negócio",
+  calc_tier_label:"Tipo de local",
+  calc_tier_kiosk:"Quiosque Express<br><small>15–25 m²</small>",
+  calc_tier_studio:"Estúdio<br><small>25–40 m²</small>",
+  calc_tier_salon:"Salão completo<br><small>40–70 m²</small>",
+  calc_clients_l:"Clientes por dia",
+  calc_ticket_l:"Preço médio por serviço",
+  calc_days_l:"Dias trabalhados por mês",
+  calc_rent_l:"Aluguel mensal do espaço",
+  calc_staff_l:"Número de técnicas (além de você)",
+  calc_staff_min:"Só eu",
+  calc_staff_max:"5 técnicas",
+  calc_salary_l:"Salário por técnica / mês",
+  calc_overhead_l:"Custos fixos adicionais (luz, água, internet…)",
+  calc_toggle_t:"Preço Primavera (12% da receita)",
+  calc_toggle_s:"Desative para ver com fornecedor genérico (22%)",
+  calc_rev_label:"Receita mensal estimada",
+  calc_profit_label:"Lucro líquido mensal",
+  calc_margin_label:"Margem",
+  calc_annual_label:"Estimativa anual",
+  calc_th_item:"Item",
+  calc_th_monthly:"Mensal",
+  calc_th_pct:"% da receita",
+  calc_row_prod:"💅 Custo de produtos",
+  calc_row_rent:"🏷️ Aluguel",
+  calc_row_labor:"👩 Folha de pagamento",
+  calc_row_overhead:"🔌 Despesas gerais",
+  calc_row_royalty:"🤝 Royalty Primavera (6%)",
+  calc_row_net:"✅ Lucro líquido",
+  calc_sav_title:"Vantagem Primavera este mês",
+  calc_sav_desc:"Com nosso preço de fábrica direta, você economiza <strong id=\"rSavings\" style=\"color:var(--rose-d)\">$0</strong> MXN por mês em produtos vs. fornecedor genérico — isso é <strong id=\"rSavingsAnnual\" style=\"color:var(--rose-d)\">$0</strong> MXN por ano que ficam no seu bolso.",
+  calc_sav_desc2:"Além disso: <em>marketing incluído, novas coleções a cada temporada, treinamento contínuo e uma marca que cresce com você.</em>",
+  calc_payback_l:"Recuperação estimada do investimento",
+  calc_invest_l:"Investimento inicial estimado",
+  calc_months:" meses",
+  calc_adjust:"Ajuste os números",
+  calc_rev_sub_unit:"MXN por mês",
+  calc_chart_prod:"Produtos",calc_chart_rent:"Aluguel",calc_chart_labor:"Folha",calc_chart_overhead:"Despesas",calc_chart_royalty:"Royalty",calc_chart_profit:"Lucro",
+  calc_cta_p:"Esses números te animam? Dê o próximo passo e fale com nossa equipe.",
+  calc_cta_btn:"Quero ser franqueada Primavera 🌸",
+}
+};
+
+let currentLang = 'en';
+function setLang(lang){
+  currentLang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k = el.getAttribute('data-i18n');
+    const d = T[lang]||T['en'];
+    if(d[k] !== undefined) el.innerHTML = d[k];
+  });
+  document.querySelectorAll('.lb').forEach(b=>b.classList.remove('active'));
+  const btn = document.querySelector(`.lb[onclick="setLang('${lang}')"]`);
+  if(btn) btn.classList.add('active');
+  if(typeof runCalc === 'function') setTimeout(runCalc, 50);
+}
+</script>
+
+
+<!-- ═══════════════════════════════════════════════
+     QUESTIONNAIRE MODAL
+═══════════════════════════════════════════════════ -->
+<div id="q-overlay" class="q-overlay" onclick="if(event.target===this)closeQuestionnaire()">
+  <div class="q-modal">
+
+    <!-- Header -->
+    <div class="q-header">
+      <div class="q-header-top">
+        <div>
+          <div class="q-label">ENCUESTA PRIMAVERA · MX 2026</div>
+          <h2 class="q-title">Cuéntanos tu historia 💅</h2>
+          <p class="q-subtitle">Responde 4 pasos rápidos y recibe un <strong>Kit de muestra Primavera gratis</strong> + nuestro reporte exclusivo de mercado de belleza LATAM.</p>
+        </div>
+        <button class="q-close" onclick="closeQuestionnaire()">✕</button>
+      </div>
+      <!-- Progress bar -->
+      <div class="q-progress-wrap">
+        <div class="q-progress-bar" id="qProgressBar"></div>
+      </div>
+      <div class="q-step-label" id="qStepLabel">Paso 1 de 4</div>
+    </div>
+
+    <!-- Steps Container -->
+    <div class="q-body">
+
+      <!-- ── STEP 1: Who are you ── -->
+      <div class="q-step active" id="qStep1">
+        <h3 class="q-step-h">¿Quién eres tú? <span>👤</span></h3>
+
+        <div class="q-field">
+          <label>Nombre completo <span class="q-opt">(opcional)</span></label>
+          <input type="text" id="q_name" placeholder="Tu nombre" class="q-input">
+        </div>
+
+        <div class="q-field">
+          <label>Correo electrónico <span class="q-req">*</span> <span class="q-hint">— para enviarte tu regalo</span></label>
+          <input type="email" id="q_email" placeholder="tu@correo.com" class="q-input">
+        </div>
+
+        <div class="q-field">
+          <label>¿En qué ciudad y estado de México trabajas o vives? <span class="q-req">*</span></label>
+          <select id="q_city" class="q-select">
+            <option value="">Selecciona tu estado…</option>
+            <option>Ciudad de México (CDMX)</option>
+            <option>Jalisco (Guadalajara)</option>
+            <option>Nuevo León (Monterrey)</option>
+            <option>Estado de México</option>
+            <option>Puebla</option>
+            <option>Querétaro</option>
+            <option>Guanajuato</option>
+            <option>Yucatán (Mérida)</option>
+            <option>Baja California (Tijuana/Ensenada)</option>
+            <option>Quintana Roo (Cancún/Playa del Carmen)</option>
+            <option>Veracruz</option>
+            <option>Otro estado</option>
+          </select>
+        </div>
+
+        <div class="q-field">
+          <label>¿Cuál de estas opciones te describe mejor? <span class="q-req">*</span></label>
+          <div class="q-options" id="q_role">
+            <div class="q-opt-card" data-val="active" onclick="selectOpt(this,'q_role')">
+              <span class="q-opt-icon">💅</span>
+              <span class="q-opt-label">Nail artist activa</span>
+              <span class="q-opt-sub">Ya tengo clientas y trabajo</span>
+            </div>
+            <div class="q-opt-card" data-val="aspiring" onclick="selectOpt(this,'q_role')">
+              <span class="q-opt-icon">🌱</span>
+              <span class="q-opt-label">Quiero empezar</span>
+              <span class="q-opt-sub">Aún no ejerzo, pero me interesa</span>
+            </div>
+            <div class="q-opt-card" data-val="owner" onclick="selectOpt(this,'q_role')">
+              <span class="q-opt-icon">🏪</span>
+              <span class="q-opt-label">Dueña de salón</span>
+              <span class="q-opt-sub">Tengo mi propio negocio</span>
+            </div>
+            <div class="q-opt-card" data-val="distributor" onclick="selectOpt(this,'q_role')">
+              <span class="q-opt-icon">📦</span>
+              <span class="q-opt-label">Distribuidora / Proveedora</span>
+              <span class="q-opt-sub">Vendo o distribuyo productos</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STEP 2: Current situation ── -->
+      <div class="q-step" id="qStep2">
+        <h3 class="q-step-h">Tu situación actual <span>📍</span></h3>
+
+        <div class="q-field">
+          <label>¿Cuántas clientas atiendes por semana aproximadamente?</label>
+          <div class="q-options q-options--sm" id="q_clients">
+            <div class="q-opt-card" data-val="0" onclick="selectOpt(this,'q_clients')"><span class="q-opt-label">Ninguna aún</span></div>
+            <div class="q-opt-card" data-val="1-10" onclick="selectOpt(this,'q_clients')"><span class="q-opt-label">1 – 10</span></div>
+            <div class="q-opt-card" data-val="11-25" onclick="selectOpt(this,'q_clients')"><span class="q-opt-label">11 – 25</span></div>
+            <div class="q-opt-card" data-val="26+" onclick="selectOpt(this,'q_clients')"><span class="q-opt-label">26 o más</span></div>
+          </div>
+        </div>
+
+        <div class="q-field">
+          <label>¿Dónde realizas tu trabajo actualmente?</label>
+          <div class="q-options q-options--sm" id="q_location">
+            <div class="q-opt-card" data-val="home" onclick="selectOpt(this,'q_location')"><span class="q-opt-icon">🏠</span><span class="q-opt-label">Estudio en casa</span></div>
+            <div class="q-opt-card" data-val="booth" onclick="selectOpt(this,'q_location')"><span class="q-opt-icon">💈</span><span class="q-opt-label">Rento un cubículo</span></div>
+            <div class="q-opt-card" data-val="ownsalon" onclick="selectOpt(this,'q_location')"><span class="q-opt-icon">🏪</span><span class="q-opt-label">Mi propio salón</span></div>
+            <div class="q-opt-card" data-val="notyet" onclick="selectOpt(this,'q_location')"><span class="q-opt-icon">🔜</span><span class="q-opt-label">Aún no trabajo</span></div>
+          </div>
+        </div>
+
+        <div class="q-field">
+          <label>¿Cuál es tu ingreso mensual aproximado solo de uñas?</label>
+          <div class="q-options q-options--sm" id="q_income">
+            <div class="q-opt-card" data-val="<5k" onclick="selectOpt(this,'q_income')"><span class="q-opt-label">Menos de $5,000 MXN</span></div>
+            <div class="q-opt-card" data-val="5-15k" onclick="selectOpt(this,'q_income')"><span class="q-opt-label">$5,000 – $15,000</span></div>
+            <div class="q-opt-card" data-val="15-30k" onclick="selectOpt(this,'q_income')"><span class="q-opt-label">$15,000 – $30,000</span></div>
+            <div class="q-opt-card" data-val="30k+" onclick="selectOpt(this,'q_income')"><span class="q-opt-label">Más de $30,000</span></div>
+          </div>
+        </div>
+
+        <div class="q-field">
+          <label>¿Qué servicios ofreces o te interesan más? <span class="q-opt">(selecciona todos los que apliquen)</span></label>
+          <div class="q-checks" id="q_services">
+            <label class="q-check"><input type="checkbox" value="gel-uv"> Gel UV/LED clásico (3 pasos)</label>
+            <label class="q-check"><input type="checkbox" value="all-in-one"> Gel todo-en-uno</label>
+            <label class="q-check"><input type="checkbox" value="acrylic"> Acrílico</label>
+            <label class="q-check"><input type="checkbox" value="bio"> Esmalte vegetal / bio</label>
+            <label class="q-check"><input type="checkbox" value="natural"> Manicura natural / spa</label>
+            <label class="q-check"><input type="checkbox" value="nailart"> Nail art / diseños</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STEP 3: Products & pain points ── -->
+      <div class="q-step" id="qStep3">
+        <h3 class="q-step-h">Productos y retos <span>🧴</span></h3>
+
+        <div class="q-field">
+          <label>¿Qué marcas usas actualmente? <span class="q-opt">(selecciona las que apliquen)</span></label>
+          <div class="q-checks" id="q_brands">
+            <label class="q-check"><input type="checkbox" value="opi"> OPI</label>
+            <label class="q-check"><input type="checkbox" value="cnd"> CND / Shellac</label>
+            <label class="q-check"><input type="checkbox" value="gelish"> Gelish</label>
+            <label class="q-check"><input type="checkbox" value="china-generic"> Marcas genéricas de China</label>
+            <label class="q-check"><input type="checkbox" value="local"> Marcas locales mexicanas</label>
+            <label class="q-check"><input type="checkbox" value="mixed"> Mezcla de varias marcas</label>
+            <label class="q-check"><input type="checkbox" value="none"> Aún no uso / no sé</label>
+          </div>
+        </div>
+
+        <div class="q-field">
+          <label>¿Cuál es tu mayor reto con los productos actualmente? <span class="q-req">*</span></label>
+          <div class="q-options" id="q_pain">
+            <div class="q-opt-card" data-val="price" onclick="selectOpt(this,'q_pain')">
+              <span class="q-opt-icon">💸</span>
+              <span class="q-opt-label">El precio es muy alto</span>
+              <span class="q-opt-sub">No encuentro buena calidad a precio justo</span>
+            </div>
+            <div class="q-opt-card" data-val="quality" onclick="selectOpt(this,'q_pain')">
+              <span class="q-opt-icon">⚠️</span>
+              <span class="q-opt-label">Calidad inconsistente</span>
+              <span class="q-opt-sub">Los productos no duran o fallan seguido</span>
+            </div>
+            <div class="q-opt-card" data-val="availability" onclick="selectOpt(this,'q_pain')">
+              <span class="q-opt-icon">🔍</span>
+              <span class="q-opt-label">Difícil de conseguir</span>
+              <span class="q-opt-sub">No hay distribuidores cerca o hay esperas largas</span>
+            </div>
+            <div class="q-opt-card" data-val="variety" onclick="selectOpt(this,'q_pain')">
+              <span class="q-opt-icon">🎨</span>
+              <span class="q-opt-label">Poca variedad de colores</span>
+              <span class="q-opt-sub">Las clientas piden tendencias que no existen aquí</span>
+            </div>
+            <div class="q-opt-card" data-val="safe" onclick="selectOpt(this,'q_pain')">
+              <span class="q-opt-icon">🌿</span>
+              <span class="q-opt-label">Ingredientes / seguridad</span>
+              <span class="q-opt-sub">Mis clientas piden productos más naturales o seguros</span>
+            </div>
+            <div class="q-opt-card" data-val="none" onclick="selectOpt(this,'q_pain')">
+              <span class="q-opt-icon">✅</span>
+              <span class="q-opt-label">Sin problema mayor</span>
+              <span class="q-opt-sub">Estoy satisfecha con mis proveedores actuales</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="q-field">
+          <label>Si pudieras tener acceso directo a una fábrica certificada FDA en China con precios mayorista — ¿qué tan interesada estarías?</label>
+          <div class="q-slider-wrap">
+            <input type="range" id="q_factory_interest" min="1" max="5" value="3" class="q-slider" oninput="updateSlider(this)">
+            <div class="q-slider-labels">
+              <span>Nada</span><span>Poco</span><span>Medio</span><span>Bastante</span><span>¡Muy interesada!</span>
+            </div>
+            <div class="q-slider-val" id="q_factory_interest_val">3 / 5</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STEP 4: Business ambition ── -->
+      <div class="q-step" id="qStep4">
+        <h3 class="q-step-h">Tus planes de negocio <span>🚀</span></h3>
+
+        <div class="q-field">
+          <label>¿Estás planeando crecer o abrir tu propio negocio en los próximos 12 meses? <span class="q-req">*</span></label>
+          <div class="q-options q-options--sm" id="q_expand">
+            <div class="q-opt-card" data-val="yes-soon" onclick="selectOpt(this,'q_expand')"><span class="q-opt-icon">🔥</span><span class="q-opt-label">Sí, muy pronto</span></div>
+            <div class="q-opt-card" data-val="yes-maybe" onclick="selectOpt(this,'q_expand')"><span class="q-opt-icon">🤔</span><span class="q-opt-label">Quizá, lo estoy considerando</span></div>
+            <div class="q-opt-card" data-val="no" onclick="selectOpt(this,'q_expand')"><span class="q-opt-icon">⏸️</span><span class="q-opt-label">No por ahora</span></div>
+          </div>
+        </div>
+
+        <div class="q-field">
+          <label>¿Cuál sería tu presupuesto estimado para iniciar o expandir?</label>
+          <div class="q-options q-options--sm" id="q_budget">
+            <div class="q-opt-card" data-val="<30k" onclick="selectOpt(this,'q_budget')"><span class="q-opt-label">Menos de $30,000 MXN</span></div>
+            <div class="q-opt-card" data-val="30-80k" onclick="selectOpt(this,'q_budget')"><span class="q-opt-label">$30,000 – $80,000</span></div>
+            <div class="q-opt-card" data-val="80-200k" onclick="selectOpt(this,'q_budget')"><span class="q-opt-label">$80,000 – $200,000</span></div>
+            <div class="q-opt-card" data-val="200k+" onclick="selectOpt(this,'q_budget')"><span class="q-opt-label">Más de $200,000</span></div>
+          </div>
+        </div>
+
+        <div class="q-field">
+          <label>¿Qué modelo de negocio preferirías?</label>
+          <div class="q-options" id="q_model">
+            <div class="q-opt-card" data-val="solo" onclick="selectOpt(this,'q_model')">
+              <span class="q-opt-icon">👩‍💼</span>
+              <span class="q-opt-label">Negocio propio independiente</span>
+              <span class="q-opt-sub">100% mi marca, mis reglas</span>
+            </div>
+            <div class="q-opt-card" data-val="franchise" onclick="selectOpt(this,'q_model')">
+              <span class="q-opt-icon">🤝</span>
+              <span class="q-opt-label">Franquicia con soporte</span>
+              <span class="q-opt-sub">Sistema probado + capacitación incluida</span>
+            </div>
+            <div class="q-opt-card" data-val="partner" onclick="selectOpt(this,'q_model')">
+              <span class="q-opt-icon">🌐</span>
+              <span class="q-opt-label">Distribuidora / Socia de productos</span>
+              <span class="q-opt-sub">Vender al mayoreo sin abrir salón</span>
+            </div>
+            <div class="q-opt-card" data-val="undecided" onclick="selectOpt(this,'q_model')">
+              <span class="q-opt-icon">💭</span>
+              <span class="q-opt-label">Aún no lo sé</span>
+              <span class="q-opt-sub">Estoy explorando mis opciones</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="q-field">
+          <label>¿Algo más que quieras contarnos? Comentarios, preguntas, ideas…</label>
+          <textarea id="q_comments" class="q-textarea" placeholder="Escribe aquí libremente — tu opinión nos importa mucho…" rows="3"></textarea>
+        </div>
+      </div>
+
+      <!-- ── THANK YOU SCREEN ── -->
+      <div class="q-step q-thankyou" id="qStepThanks">
+        <div class="q-ty-icon">🎁</div>
+        <h3 class="q-ty-h">¡Gracias, <span id="q_ty_name">amiga</span>!</h3>
+        <p class="q-ty-p">Tu opinión es un regalo para nosotras. Hemos registrado tus respuestas y <strong>recibirás tu kit de bienvenida Primavera</strong> en el correo que nos diste.</p>
+        <div class="q-ty-gifts">
+          <div class="q-gift-card">
+            <span>💅</span>
+            <strong>Kit Muestra Primavera</strong>
+            <span class="q-gift-sub">5 colores signature + top coat</span>
+          </div>
+          <div class="q-gift-card">
+            <span>📊</span>
+            <strong>Reporte de Mercado LATAM</strong>
+            <span class="q-gift-sub">PDF exclusivo 2026 — para ti</span>
+          </div>
+        </div>
+        <p class="q-ty-fine">Te contactaremos en los próximos 3-5 días hábiles a <span id="q_ty_email" style="color:var(--rose);font-weight:600;"></span></p>
+        <button class="q-btn q-btn--rose" onclick="closeQuestionnaire()" style="margin-top:1.5rem;">Cerrar y seguir explorando ✨</button>
+      </div>
+
+    </div><!-- /q-body -->
+
+    <!-- Footer nav -->
+    <div class="q-footer" id="qFooter">
+      <div class="q-foot-left">
+        <button class="q-btn q-btn--ghost" id="qBackBtn" onclick="qStep(-1)" style="display:none;">← Atrás</button>
+      </div>
+      <div class="q-foot-right">
+        <button class="q-btn q-btn--rose" id="qNextBtn" onclick="qStep(1)">Siguiente →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+<!-- ═══════════ QUESTIONNAIRE CSS ═══════════ -->
+<style>
+/* Trigger button */
+.q-trigger{position:relative;display:flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,var(--rose) 0%,#E8956A 100%);color:#fff;border:none;border-radius:50px;padding:.55rem 1.25rem .55rem .9rem;font-size:.82rem;font-weight:700;letter-spacing:.04em;cursor:pointer;white-space:nowrap;box-shadow:0 3px 14px rgba(207,123,96,.45);transition:transform .2s,box-shadow .2s;overflow:hidden;}
+.q-trigger:hover{transform:translateY(-1px);box-shadow:0 5px 20px rgba(207,123,96,.55);}
+.q-gift{font-size:1rem;}
+.q-trigger-text{position:relative;z-index:1;}
+.q-pulse{position:absolute;inset:0;border-radius:50px;background:rgba(255,255,255,.2);animation:qPulse 2.2s ease-in-out infinite;}
+@keyframes qPulse{0%,100%{transform:scale(1);opacity:.3}50%{transform:scale(1.06);opacity:.08}}
+
+/* Overlay */
+.q-overlay{display:none;position:fixed;inset:0;background:rgba(26,18,16,.6);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center;padding:1rem;}
+.q-overlay.open{display:flex;}
+
+/* Modal */
+.q-modal{background:#fff;border-radius:20px;width:min(660px,100%);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.25);}
+
+/* Modal header */
+.q-header{background:linear-gradient(135deg,var(--rose-d) 0%,var(--rose) 60%,#E8956A 100%);color:#fff;padding:1.75rem 1.75rem 1rem;}
+.q-header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:1.25rem;}
+.q-label{font-size:.7rem;font-weight:700;letter-spacing:.12em;opacity:.8;margin-bottom:.4rem;}
+.q-title{font-family:var(--serif);font-size:1.65rem;font-weight:400;margin:0 0 .35rem;}
+.q-subtitle{font-size:.88rem;opacity:.9;line-height:1.5;margin:0;}
+.q-close{background:rgba(255,255,255,.2);border:none;color:#fff;width:34px;height:34px;border-radius:50%;font-size:1rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.q-close:hover{background:rgba(255,255,255,.35);}
+.q-progress-wrap{background:rgba(255,255,255,.25);border-radius:10px;height:6px;margin-bottom:.5rem;}
+.q-progress-bar{background:#fff;height:6px;border-radius:10px;width:25%;transition:width .4s ease;}
+.q-step-label{font-size:.75rem;opacity:.8;text-align:right;}
+
+/* Body */
+.q-body{overflow-y:auto;padding:1.5rem 1.75rem;flex:1;}
+.q-step{display:none;animation:qFadeIn .3s ease;}
+.q-step.active{display:block;}
+@keyframes qFadeIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+.q-step-h{font-family:var(--serif);font-size:1.3rem;color:var(--dark);margin:0 0 1.5rem;}
+
+/* Fields */
+.q-field{margin-bottom:1.4rem;}
+.q-field label{display:block;font-size:.88rem;font-weight:600;color:var(--dark);margin-bottom:.5rem;}
+.q-req{color:var(--rose);font-weight:700;}
+.q-opt{font-weight:400;color:var(--muted);font-size:.82rem;}
+.q-hint{font-weight:400;color:var(--muted);font-size:.82rem;}
+.q-input{width:100%;padding:.7rem 1rem;border:1.5px solid var(--border);border-radius:10px;font-size:.95rem;color:var(--dark);outline:none;transition:border-color .2s;box-sizing:border-box;}
+.q-input:focus{border-color:var(--rose);}
+.q-select{width:100%;padding:.7rem 1rem;border:1.5px solid var(--border);border-radius:10px;font-size:.95rem;color:var(--dark);background:#fff;outline:none;cursor:pointer;transition:border-color .2s;box-sizing:border-box;}
+.q-select:focus{border-color:var(--rose);}
+.q-textarea{width:100%;padding:.75rem 1rem;border:1.5px solid var(--border);border-radius:10px;font-size:.93rem;color:var(--dark);resize:vertical;outline:none;font-family:var(--sans);transition:border-color .2s;box-sizing:border-box;}
+.q-textarea:focus{border-color:var(--rose);}
+
+/* Option cards */
+.q-options{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;}
+.q-options--sm{grid-template-columns:repeat(2,1fr);}
+@media(max-width:480px){.q-options{grid-template-columns:1fr;}.q-options--sm{grid-template-columns:1fr 1fr;}}
+.q-opt-card{background:var(--bg-soft);border:1.5px solid var(--border);border-radius:12px;padding:.85rem 1rem;cursor:pointer;transition:border-color .18s,background .18s,transform .15s;display:flex;flex-direction:column;gap:.2rem;}
+.q-opt-card:hover{border-color:var(--rose-mid);background:#FFF0EA;transform:translateY(-1px);}
+.q-opt-card.selected{border-color:var(--rose);background:#FFF0EA;box-shadow:0 0 0 3px rgba(207,123,96,.18);}
+.q-opt-icon{font-size:1.3rem;}
+.q-opt-label{font-weight:600;font-size:.9rem;color:var(--dark);}
+.q-opt-sub{font-size:.78rem;color:var(--muted);}
+
+/* Checkboxes */
+.q-checks{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;}
+@media(max-width:480px){.q-checks{grid-template-columns:1fr;}}
+.q-check{display:flex;align-items:center;gap:.6rem;padding:.6rem .8rem;border:1.5px solid var(--border);border-radius:9px;cursor:pointer;font-size:.88rem;color:var(--text);transition:border-color .15s,background .15s;}
+.q-check:hover{border-color:var(--rose-mid);background:#FFF6F2;}
+.q-check input{accent-color:var(--rose);width:15px;height:15px;flex-shrink:0;}
+.q-check:has(input:checked){border-color:var(--rose);background:#FFF0EA;}
+
+/* Slider */
+.q-slider-wrap{display:flex;flex-direction:column;gap:.5rem;}
+.q-slider{width:100%;accent-color:var(--rose);height:5px;cursor:pointer;}
+.q-slider-labels{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);}
+.q-slider-val{text-align:center;font-weight:700;color:var(--rose);font-size:.9rem;}
+
+/* Footer */
+.q-footer{padding:1rem 1.75rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:#FAFAFA;}
+.q-foot-left,.q-foot-right{display:flex;gap:.75rem;}
+.q-btn{padding:.65rem 1.5rem;border-radius:50px;font-size:.9rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;}
+.q-btn--rose{background:linear-gradient(135deg,var(--rose-d),var(--rose));color:#fff;box-shadow:0 3px 12px rgba(207,123,96,.3);}
+.q-btn--rose:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(207,123,96,.4);}
+.q-btn--ghost{background:transparent;color:var(--muted);border:1.5px solid var(--border);}
+.q-btn--ghost:hover{border-color:var(--rose);color:var(--rose);}
+
+/* Thank you */
+.q-thankyou{text-align:center;padding:1rem 0;}
+.q-ty-icon{font-size:3.5rem;margin-bottom:1rem;}
+.q-ty-h{font-family:var(--serif);font-size:1.8rem;color:var(--dark);margin:0 0 .75rem;}
+.q-ty-p{color:var(--text);font-size:.95rem;line-height:1.65;margin-bottom:1.5rem;}
+.q-ty-gifts{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;}
+.q-gift-card{background:var(--bg-soft);border:1.5px solid var(--rose-l);border-radius:14px;padding:1.25rem;display:flex;flex-direction:column;gap:.4rem;align-items:center;font-size:.9rem;}
+.q-gift-card span:first-child{font-size:2rem;}
+.q-gift-card strong{font-weight:700;color:var(--dark);}
+.q-gift-sub{font-size:.78rem;color:var(--muted);}
+.q-ty-fine{font-size:.82rem;color:var(--muted);}
+@media(max-width:480px){.q-ty-gifts{grid-template-columns:1fr;}}
+
+/* Nav button responsive */
+@media(max-width:900px){.q-trigger-text{display:none;}.q-trigger{padding:.55rem .8rem;}}
+</style>
+<!-- ═══════════ QUESTIONNAIRE JS ═══════════ -->
+<script>
+(function(){
+  let currentQStep = 1;
+  const totalSteps = 4;
+
+  window.openQuestionnaire = function() {
+    document.getElementById('q-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    updateQProgress();
+  };
+
+  window.closeQuestionnaire = function() {
+    document.getElementById('q-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  window.selectOpt = function(el, groupId) {
+    document.querySelectorAll('#' + groupId + ' .q-opt-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  };
+
+  window.updateSlider = function(el) {
+    document.getElementById(el.id + '_val').textContent = el.value + ' / 5';
+  };
+
+  function updateQProgress() {
+    const pct = (currentQStep / totalSteps) * 100;
+    document.getElementById('qProgressBar').style.width = pct + '%';
+    document.getElementById('qStepLabel').textContent = 'Paso ' + currentQStep + ' de ' + totalSteps;
+    document.getElementById('qBackBtn').style.display = currentQStep > 1 ? 'inline-flex' : 'none';
+    document.getElementById('qNextBtn').textContent = currentQStep === totalSteps ? 'Enviar y reclamar regalo 🎁' : 'Siguiente →';
+  }
+
+  function validateStep() {
+    if (currentQStep === 1) {
+      const email = document.getElementById('q_email').value.trim();
+      const city  = document.getElementById('q_city').value;
+      const role  = document.querySelector('#q_role .selected');
+      if (!email || !email.includes('@')) {
+        alert('Por favor ingresa un correo válido para enviarte tu regalo.'); return false;
+      }
+      if (!city) { alert('Por favor selecciona tu estado.'); return false; }
+      if (!role)  { alert('Por favor selecciona cuál opción te describe mejor.'); return false; }
+    }
+    if (currentQStep === 3) {
+      const pain = document.querySelector('#q_pain .selected');
+      if (!pain) { alert('Por favor selecciona tu mayor reto con productos.'); return false; }
+    }
+    if (currentQStep === 4) {
+      const expand = document.querySelector('#q_expand .selected');
+      if (!expand) { alert('Por favor selecciona tu respuesta sobre planes de crecimiento.'); return false; }
+    }
+    return true;
+  }
+
+  window.qStep = function(dir) {
+    if (dir === 1 && !validateStep()) return;
+
+    // Hide current
+    document.getElementById('qStep' + currentQStep).classList.remove('active');
+
+    if (dir === 1 && currentQStep === totalSteps) {
+      // Submit
+      submitQuestionnaire();
+      return;
+    }
+
+    currentQStep += dir;
+    document.getElementById('qStep' + currentQStep).classList.add('active');
+    // Scroll modal body to top
+    document.querySelector('.q-body').scrollTop = 0;
+    updateQProgress();
+  };
+
+  function submitQuestionnaire() {
+    // Collect answers
+    const name    = document.getElementById('q_name').value.trim() || 'amiga';
+    const email   = document.getElementById('q_email').value.trim();
+
+    // Show thanks screen
+    document.getElementById('qFooter').style.display = 'none';
+    document.getElementById('qStepLabel').textContent = '¡Completado!';
+    document.getElementById('qProgressBar').style.width = '100%';
+    document.getElementById('q_ty_name').textContent = name.split(' ')[0] || 'amiga';
+    document.getElementById('q_ty_email').textContent = email;
+    document.getElementById('qStepThanks').classList.add('active');
+    document.querySelector('.q-body').scrollTop = 0;
+
+    // Log to console (would send to backend in production)
+    const answers = collectAnswers();
+    console.log('Primavera Survey Response:', answers);
+  }
+
+  function collectAnswers() {
+    const checks = (id) => [...document.querySelectorAll('#' + id + ' input:checked')].map(i => i.value).join(', ');
+    return {
+      name:     document.getElementById('q_name').value,
+      email:    document.getElementById('q_email').value,
+      city:     document.getElementById('q_city').value,
+      role:     document.querySelector('#q_role .selected')?.dataset.val || '',
+      clients:  document.querySelector('#q_clients .selected')?.dataset.val || '',
+      location: document.querySelector('#q_location .selected')?.dataset.val || '',
+      income:   document.querySelector('#q_income .selected')?.dataset.val || '',
+      services: checks('q_services'),
+      brands:   checks('q_brands'),
+      pain:     document.querySelector('#q_pain .selected')?.dataset.val || '',
+      factoryInterest: document.getElementById('q_factory_interest').value,
+      expand:   document.querySelector('#q_expand .selected')?.dataset.val || '',
+      budget:   document.querySelector('#q_budget .selected')?.dataset.val || '',
+      model:    document.querySelector('#q_model .selected')?.dataset.val || '',
+      comments: document.getElementById('q_comments').value,
+      timestamp: new Date().toISOString()
+    };
+  }
+})();
+</script>
+
+<script>
+// ── Dropdown click toggle ──
+(function(){
+  document.querySelectorAll('.has-drop').forEach(function(li){
+    var btn = li.querySelector('.nav-drop-btn');
+    if(!btn) return;
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      var isOpen = li.classList.contains('open');
+      // close all others
+      document.querySelectorAll('.has-drop.open').forEach(function(x){ x.classList.remove('open'); });
+      if(!isOpen) li.classList.add('open');
+    });
+  });
+  // close on outside click
+  document.addEventListener('click', function(){
+    document.querySelectorAll('.has-drop.open').forEach(function(x){ x.classList.remove('open'); });
+  });
+})();
+</script>
+
+</body>
+</html>
