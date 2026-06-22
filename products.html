@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Primavera — Startup Tools Catalog</title>
+<style>
+/* ── TOKENS ── */
+:root{
+  --rose:#CF7B60;--rose-l:#F5DDD3;--rose-d:#A05038;--rose-mid:#E8B5A0;
+  --sage:#8B9D89;--sage-l:#EBF2EA;
+  --dark:#1A1210;--text:#2A1E1A;--muted:#7A6258;--border:#EDD8CE;
+  --bg:#FFFFFF;--bg-soft:#FFF8F5;--bg-sage:#F4F8F3;--bg-gray:#F7F7F7;
+  --card:#FFFFFF;--sh:0 2px 20px rgba(26,18,16,.07);--shh:0 8px 40px rgba(26,18,16,.13);
+  --r:14px;--tr:all .3s ease;
+  --serif:Georgia,serif;--sans:'Segoe UI',system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.65;overflow-x:hidden}
+h1,h2,h3{font-family:var(--serif)}
+
+/* ── NAV ── */
+.nav{position:sticky;top:0;left:0;right:0;z-index:1000;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;border-bottom:1px solid var(--border);box-shadow:0 2px 12px rgba(207,123,96,.08)}
+.nav-logo{height:32px;width:auto}
+.nav-links{display:flex;gap:2rem;list-style:none;align-items:center;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;transition:var(--tr);font-weight:500}
+.nav-links a:hover{color:var(--rose)}
+@media(max-width:900px){.nav-links{display:none}}
+.lang-sw{display:flex;gap:4px}
+.lb{border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:.72rem;padding:5px 11px;border-radius:20px;cursor:pointer;transition:var(--tr);font-weight:600;letter-spacing:.04em}
+.lb.active,.lb:hover{background:var(--rose);border-color:var(--rose);color:#fff}
+.nav-links li.has-drop{position:relative;}
+.nav-drop-btn{color:var(--muted);font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;font-weight:500;background:none;border:none;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:5px;padding:0;transition:color .2s;}
+.nav-drop-btn:hover{color:var(--rose);}
+.nav-drop-btn .caret{font-size:.55rem;line-height:1;display:inline-block;transition:transform .22s ease;}
+.has-drop.open .caret{transform:rotate(180deg);}
+.nav-dropdown{display:none;position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%);background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 10px 36px rgba(26,18,16,.13);min-width:190px;padding:.5rem 0;z-index:2000;animation:ddFade .18s ease;}
+@keyframes ddFade{from{opacity:0;transform:translateX(-50%) translateY(-6px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.has-drop.open .nav-dropdown{display:block;}
+.nav-dropdown a{display:block;padding:.6rem 1.3rem;color:var(--muted);font-size:.78rem;text-decoration:none;letter-spacing:.06em;text-transform:uppercase;font-weight:500;transition:color .15s,background .15s;border-radius:6px;margin:1px 4px;}
+.nav-dropdown a:hover{color:var(--rose);background:var(--bg-soft);}
+
+/* ── HERO ── */
+.hero{background:linear-gradient(135deg,var(--rose-d) 0%,var(--rose) 55%,#E89A70 100%);padding:3.5rem 2rem 3rem;text-align:center;color:#fff;}
+.hero-tag{display:inline-block;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;padding:4px 14px;border-radius:20px;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:1rem;}
+.hero-h{font-family:var(--serif);font-size:clamp(1.8rem,4.5vw,3rem);font-weight:400;margin-bottom:.75rem;}
+.hero-sub{font-size:.97rem;opacity:.88;max-width:560px;margin:0 auto 2rem;line-height:1.7;}
+.hero-stat-row{display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;}
+.hero-stat{text-align:center;}
+.hero-stat .num{font-family:var(--serif);font-size:2rem;font-weight:400;}
+.hero-stat .lbl{font-size:.72rem;opacity:.75;letter-spacing:.08em;text-transform:uppercase;}
+
+/* ── LABEL ── */
+.label{display:inline-block;background:var(--rose-l);color:var(--rose-d);padding:4px 14px;border-radius:20px;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.75rem;}
+
+/* ── TOOLBAR ── */
+.toolbar{background:#fff;border-bottom:1px solid var(--border);padding:1rem 2rem;position:sticky;top:64px;z-index:100;}
+.toolbar-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+.search-wrap{position:relative;flex:1;min-width:200px;}
+.search-wrap input{width:100%;border:1.5px solid var(--border);border-radius:50px;padding:.55rem 1rem .55rem 2.5rem;font-size:.88rem;font-family:var(--sans);color:var(--text);outline:none;transition:border-color .2s;background:var(--bg-soft);}
+.search-wrap input:focus{border-color:var(--rose);}
+.search-wrap .icon{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.9rem;pointer-events:none;}
+.note-pill{background:var(--bg-sage);border:1px solid var(--sage-l);color:var(--muted);font-size:.72rem;padding:5px 12px;border-radius:20px;white-space:nowrap;font-weight:500;}
+
+/* ── CATEGORY TABS ── */
+.cat-scroll{overflow-x:auto;padding:.75rem 2rem;background:var(--bg-soft);border-bottom:1px solid var(--border);-webkit-overflow-scrolling:touch;}
+.cat-scroll::-webkit-scrollbar{height:4px;}
+.cat-scroll::-webkit-scrollbar-thumb{background:var(--rose-l);border-radius:4px;}
+.cat-row{display:flex;gap:.5rem;min-width:max-content;margin:0 auto;max-width:1100px;}
+.cat-btn{display:flex;align-items:center;gap:.4rem;padding:.45rem 1rem;border-radius:50px;font-size:.78rem;font-weight:600;border:1.5px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;transition:all .18s;white-space:nowrap;letter-spacing:.02em;}
+.cat-btn:hover{border-color:var(--rose);color:var(--rose);}
+.cat-btn.active{background:var(--rose);border-color:var(--rose);color:#fff;}
+.cat-btn .cnt{background:rgba(0,0,0,.1);border-radius:20px;padding:1px 7px;font-size:.68rem;font-weight:700;}
+.cat-btn.active .cnt{background:rgba(255,255,255,.25);}
+
+/* ── CATALOG ── */
+.catalog{padding:2.5rem 2rem 4rem;}
+.catalog-inner{max-width:1100px;margin:0 auto;}
+.section-sep{margin:2.5rem 0 1.5rem;display:flex;align-items:center;gap:1rem;}
+.section-sep h2{font-family:var(--serif);font-size:1.25rem;color:var(--dark);white-space:nowrap;}
+.section-sep hr{flex:1;border:none;border-top:1.5px solid var(--border);}
+.section-emoji{font-size:1.3rem;}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;}
+.product-card{background:var(--card);border-radius:var(--r);border:1.5px solid var(--border);padding:1.1rem 1.2rem;display:flex;flex-direction:column;gap:.5rem;transition:box-shadow .2s,border-color .2s;position:relative;}
+.product-card:hover{box-shadow:var(--sh);border-color:var(--rose-mid);}
+.product-name{font-weight:600;font-size:.9rem;color:var(--dark);line-height:1.35;}
+.product-price{font-family:var(--serif);font-size:1.15rem;color:var(--rose-d);font-weight:400;}
+.product-note{display:inline-block;background:var(--bg-sage);color:var(--sage);font-size:.68rem;font-weight:600;padding:2px 8px;border-radius:10px;letter-spacing:.04em;}
+.product-orig{font-size:.72rem;color:var(--muted);margin-top:.15rem;opacity:.7;}
+.no-results{text-align:center;padding:4rem 2rem;color:var(--muted);}
+.no-results .icon{font-size:2.5rem;margin-bottom:1rem;}
+.section-hidden{display:none;}
+
+/* ── FOOTER ── */
+footer{background:var(--dark);color:rgba(255,255,255,.75);padding:3rem 2rem 2rem;}
+.footer-inner{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:1.5rem;text-align:center;}
+.footer-brand img{height:36px;filter:brightness(0) invert(1);opacity:.85;}
+.footer-tagline{font-size:.8rem;opacity:.6;letter-spacing:.06em;}
+.footer-links{display:flex;gap:2rem;flex-wrap:wrap;justify-content:center;}
+.footer-links a{color:rgba(255,255,255,.55);text-decoration:none;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;transition:color .2s;}
+.footer-links a:hover{color:var(--rose-mid);}
+.footer-copy{font-size:.72rem;opacity:.45;}
+
+@media(max-width:600px){
+  .product-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));}
+  .toolbar-inner{flex-direction:column;align-items:stretch;}
+}
+
+/* ── PRODUCT IMAGES ── */
+.product-img-wrap{width:100%;aspect-ratio:1/1;overflow:hidden;border-radius:8px;background:var(--bg-soft);margin-bottom:.5rem;display:flex;align-items:center;justify-content:center;}
+.product-img-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .3s ease;}
+.product-card:hover .product-img-wrap img{transform:scale(1.04);}
+.product-img-placeholder{font-size:2rem;opacity:.3;}
+</style>
+</head>
+<body>
+<!-- NAV -->
+<nav class="nav">
+<a href="report.html"><img alt="Primavera" class="nav-logo" onerror="this.outerHTML='&lt;span style=\'font-family:Georgia,serif;font-size:1.1rem;color:var(--rose-d);font-weight:400;letter-spacing:.04em;\'&gt;Primavera&lt;/span&gt;'" src="logo_primavera.jpg"/></a>
+<ul class="nav-links">
+<li class="has-drop">
+<button class="nav-drop-btn" data-i18n="nav_explore">Explore <span class="caret">▾</span></button>
+<div class="nav-dropdown">
+<a data-i18n="nav_market" href="report.html#market">Market</a>
+<a data-i18n="nav_countries" href="report.html#countries">Countries</a>
+<a data-i18n="nav_tech" href="report.html#tech">Technology</a>
+<a data-i18n="nav_swot" href="report.html#swot">SWOT</a>
+<a data-i18n="nav_regs" href="report.html#regulations">Regulations</a>
+<a data-i18n="nav_fin" href="report.html#financials">Financials</a>
+</div>
+</li>
+<li><a data-i18n="nav_franchise" href="franchise.html">Franchise</a></li>
+<li><a data-i18n="nav_startup" href="index.html">📋 Startup Guide</a></li>
+<li><a data-i18n="nav_calc" href="calculator.html" style="">💰 Calculator</a></li>
+<li><a data-i18n="nav_products" href="#" onclick="return false;" style="color:var(--rose);font-weight:700;">🛒 Tools Catalog</a></li>
+</ul>
+<div class="lang-sw">
+<button class="lb active" onclick="setLang('en')">EN</button>
+<button class="lb" onclick="setLang('es')">ES</button>
+</div>
+</nav>
+<!-- HERO -->
+<section class="hero">
+<div class="hero-tag" data-i18n="hero_tag">China Supplier · Direct Source</div>
+<h1 class="hero-h" data-i18n="hero_h">Startup Tools Catalog</h1>
+<p class="hero-sub" data-i18n="hero_sub">Everything a nail artist needs to open their first studio — sourced directly from our China supplier. Prices shown in Chinese Yuan (¥ RMB).</p>
+<div class="hero-stat-row">
+<div class="hero-stat"><div class="num">115+</div><div class="lbl" data-i18n="stat1">Products</div></div>
+<div class="hero-stat"><div class="num">13</div><div class="lbl" data-i18n="stat2">Categories</div></div>
+<div class="hero-stat"><div class="num">¥1–¥338</div><div class="lbl" data-i18n="stat3">Price Range</div></div>
+</div>
+</section>
+<!-- TOOLBAR -->
+<div class="toolbar">
+<div class="toolbar-inner">
+<div class="search-wrap">
+<span class="icon">🔍</span>
+<input data-i18n-placeholder="search_placeholder" id="searchInput" oninput="filterProducts()" placeholder="Search products..." type="text"/>
+</div>
+<div class="note-pill" data-i18n="currency_note">💱 Prices in ¥ RMB (Chinese Yuan)</div>
+</div>
+</div>
+<!-- CATEGORY TABS -->
+<div class="cat-scroll">
+<div class="cat-row" id="catRow">
+<button class="cat-btn active" data-cat="all" onclick="setCategory(this)">
+      ✨ <span data-i18n="cat_all">All</span> <span class="cnt" id="cnt-all">115</span>
+</button>
+<button class="cat-btn" data-cat="files" onclick="setCategory(this)">
+      📋 <span data-i18n="cat_files">Files &amp; Buffers</span> <span class="cnt">10</span>
+</button>
+<button class="cat-btn" data-cat="cuticle" onclick="setCategory(this)">
+      ✂️ <span data-i18n="cat_cuticle">Cuticle Tools</span> <span class="cnt">10</span>
+</button>
+<button class="cat-btn" data-cat="tools" onclick="setCategory(this)">
+      🖌️ <span data-i18n="cat_tools">Brushes &amp; Pens</span> <span class="cnt">12</span>
+</button>
+<button class="cat-btn" data-cat="liquids" onclick="setCategory(this)">
+      💧 <span data-i18n="cat_liquids">Oils &amp; Liquids</span> <span class="cnt">10</span>
+</button>
+<button class="cat-btn" data-cat="supplies" onclick="setCategory(this)">
+      📦 <span data-i18n="cat_supplies">Supplies</span> <span class="cnt">17</span>
+</button>
+<button class="cat-btn" data-cat="armrests" onclick="setCategory(this)">
+      🛋️ <span data-i18n="cat_armrests">Arm Rests</span> <span class="cnt">4</span>
+</button>
+<button class="cat-btn" data-cat="lamps" onclick="setCategory(this)">
+      💡 <span data-i18n="cat_lamps">Lamps</span> <span class="cnt">9</span>
+</button>
+<button class="cat-btn" data-cat="dust" onclick="setCategory(this)">
+      🌀 <span data-i18n="cat_dust">Dust Collectors</span> <span class="cnt">3</span>
+</button>
+<button class="cat-btn" data-cat="drills" onclick="setCategory(this)">
+      ⚙️ <span data-i18n="cat_drills">Nail Drills</span> <span class="cnt">7</span>
+</button>
+<button class="cat-btn" data-cat="gel" onclick="setCategory(this)">
+      💅 <span data-i18n="cat_gel">Tips &amp; Gel</span> <span class="cnt">24</span>
+</button>
+<button class="cat-btn" data-cat="hygiene" onclick="setCategory(this)">
+      🧤 <span data-i18n="cat_hygiene">PPE &amp; Hygiene</span> <span class="cnt">4</span>
+</button>
+<button class="cat-btn" data-cat="foot" onclick="setCategory(this)">
+      🦶 <span data-i18n="cat_foot">Foot Care</span> <span class="cnt">7</span>
+</button>
+</div>
+</div>
+<!-- CATALOG -->
+<main class="catalog">
+<div class="catalog-inner" id="catalogInner">
+<!-- FILES & BUFFERS -->
+<div class="cat-section" data-section="files">
+<div class="section-sep"><span class="section-emoji">📋</span><h2 data-i18n="cat_files">Files &amp; Buffers</h2><hr/></div>
+<div class="product-grid">
+<div class="product-card" data-cat="files" data-name="LiuShi Diamond Thick File"><div class="product-img-wrap"><img alt="LiuShi Diamond Thick File" loading="lazy" src="product-images/product_001.jpg"/></div>
+<div class="product-name">LiuShi Diamond Thick File</div>
+<div class="product-orig">刘氏一族菱形厚砂条</div>
+<div class="product-price">¥95</div>
+<span class="product-note">25/pack</span>
+</div>
+<div class="product-card" data-cat="files" data-name="LiuShi Diamond Thick File Yellow"><div class="product-img-wrap"><img alt="LiuShi Diamond Thick File Yellow" loading="lazy" src="product-images/product_002.jpg"/></div>
+<div class="product-name">LiuShi Diamond Thick File <em style="color:var(--muted);font-style:normal;">(Yellow)</em></div>
+<div class="product-orig">刘氏一族菱形厚砂条（黄色）</div>
+<div class="product-price">¥95</div>
+<span class="product-note">25/pack</span>
+</div>
+<div class="product-card" data-cat="files" data-name="OPI Diamond Thick File"><div class="product-img-wrap"><img alt="OPI Diamond Thick File" loading="lazy" src="product-images/product_097.jpg"/></div>
+<div class="product-name">OPI Diamond Thick File</div>
+<div class="product-orig">OPI菱形厚砂条</div>
+<div class="product-price">¥20</div>
+<span class="product-note">25/pack</span>
+</div>
+<div class="product-card" data-cat="files" data-name="LiuShi Thin File"><div class="product-img-wrap"><img alt="LiuShi Thin File" loading="lazy" src="product-images/product_096.jpg"/></div>
+<div class="product-name">LiuShi Thin File</div>
+<div class="product-orig">刘氏薄砂条</div>
+<div class="product-price">¥80</div>
+<span class="product-note">50/pack</span>
+</div>
+<div class="product-card" data-cat="files" data-name="OPI Thin File"><div class="product-img-wrap"><img alt="OPI Thin File" loading="lazy" src="product-images/product_095.jpg"/></div>
+<div class="product-name">OPI Thin File</div>
+<div class="product-orig">OPI薄砂条</div>
+<div class="product-price">¥40</div>
+<span class="product-note">50/pack</span>
+</div>
+<div class="product-card" data-cat="files" data-name="LiuShi Buffer Block"><div class="product-img-wrap"><img alt="LiuShi Buffer Block" loading="lazy" src="product-images/product_094.jpg"/></div>
+<div class="product-name">LiuShi Buffer Block</div>
+<div class="product-orig">刘一族海绵条</div>
+<div class="product-price">¥38</div>
+<span class="product-note">10/pack</span>
+</div>
+<div class="product-card" data-cat="files" data-name="SUN Buffer Block"><div class="product-img-wrap"><img alt="SUN Buffer Block" loading="lazy" src="product-images/product_093.jpg"/></div>
+<div class="product-name">SUN Buffer Block</div>
+<div class="product-orig">SUN海绵条</div>
+<div class="product-price">¥18</div>
+<span class="product-note">10/pack</span>
+</div>
+<div class="product-card" data-cat="files" data-name="Custom Buffer Block"><div class="product-img-wrap"><img alt="Custom Buffer Block" loading="lazy" src="product-images/product_092.jpg"/></div>
+<div class="product-name">Custom Buffer Block</div>
+<div class="product-orig">私人订制海绵条</div>
+<div class="product-price">¥10</div>
+<span class="product-note">10/pack</span>
+</div>
+<div class="product-card" data-cat="files" data-name="LiuShi Polishing Strip"><div class="product-img-wrap"><img alt="LiuShi Polishing Strip" loading="lazy" src="product-images/product_091.jpg"/></div>
+<div class="product-name">LiuShi Polishing Strip</div>
+<div class="product-orig">刘氏抛光条</div>
+<div class="product-price">¥18</div>
+<span class="product-note">15/pack</span>
+</div>
+<div class="product-card" data-cat="files" data-name="SUN Polishing Strip"><div class="product-img-wrap"><img alt="SUN Polishing Strip" loading="lazy" src="product-images/product_090.jpg"/></div>
+<div class="product-name">SUN Polishing Strip</div>
+<div class="product-orig">SUN抛光条</div>
+<div class="product-price">¥12</div>
+<span class="product-note">15/pack</span>
+</div>
+</div>
+</div>
+<!-- CUTICLE TOOLS -->
+<div class="cat-section" data-section="cuticle">
+<div class="section-sep"><span class="section-emoji">✂️</span><h2 data-i18n="cat_cuticle">Cuticle Tools</h2><hr/></div>
+<div class="product-grid">
+<div class="product-card" data-cat="cuticle" data-name="Diamond Rose Gold Cuticle Scissors"><div class="product-img-wrap"><img alt="Diamond Rose Gold Cuticle Scissors" loading="lazy" src="product-images/product_089.jpg"/></div>
+<div class="product-name">Diamond Rose Gold Cuticle Scissors</div>
+<div class="product-orig">钻石玫瑰金死皮剪</div>
+<div class="product-price">¥28</div>
+</div>
+<div class="product-card" data-cat="cuticle" data-name="LUCKY Swan Cuticle Scissors"><div class="product-img-wrap"><img alt="LUCKY Swan Cuticle Scissors" loading="lazy" src="product-images/product_088.jpg"/></div>
+<div class="product-name">LUCKY Swan Cuticle Scissors</div>
+<div class="product-orig">LUCKY天鹅剪</div>
+<div class="product-price">¥48</div>
+</div>
+<div class="product-card" data-cat="cuticle" data-name="Diamond Large Cuticle Pusher"><div class="product-img-wrap"><img alt="Diamond Large Cuticle Pusher" loading="lazy" src="product-images/product_087.jpg"/></div>
+<div class="product-name">Diamond Large Cuticle Pusher</div>
+<div class="product-orig">钻石大钢推</div>
+<div class="product-price">¥15</div>
+</div>
+<div class="product-card" data-cat="cuticle" data-name="Diamond Small Cuticle Pusher"><div class="product-img-wrap"><img alt="Diamond Small Cuticle Pusher" loading="lazy" src="product-images/product_086.jpg"/></div>
+<div class="product-name">Diamond Small Cuticle Pusher</div>
+<div class="product-orig">钻石小钢推</div>
+<div class="product-price">¥8</div>
+</div>
+<div class="product-card" data-cat="cuticle" data-name="Cuticle Fork"><div class="product-img-wrap"><img alt="Cuticle Fork" loading="lazy" src="product-images/product_085.jpg"/></div>
+<div class="product-name">Cuticle Fork</div>
+<div class="product-orig">死皮叉</div>
+<div class="product-price">¥1</div>
+</div>
+<div class="product-card" data-cat="cuticle" data-name="Anti-Splash Nail Clipper"><div class="product-img-wrap"><img alt="Anti-Splash Nail Clipper" loading="lazy" src="product-images/product_084.jpg"/></div>
+<div class="product-name">Anti-Splash Nail Clipper</div>
+<div class="product-orig">防飞溅大口钳</div>
+<div class="product-price">¥10</div>
+</div>
+<div class="product-card" data-cat="cuticle" data-name="Boyou Nail Scissors"><div class="product-img-wrap"><img alt="Boyou Nail Scissors" loading="lazy" src="product-images/product_083.jpg"/></div>
+<div class="product-name">Boyou Nail Scissors</div>
+<div class="product-orig">博友指甲剪</div>
+<div class="product-price">¥6</div>
+</div>
+<div class="product-card" data-cat="cuticle" data-name="Straight-Edge Nail Scissors"><div class="product-img-wrap"><img alt="Straight-Edge Nail Scissors" loading="lazy" src="product-images/product_082.jpg"/></div>
+<div class="product-name">Straight-Edge Nail Scissors</div>
+<div class="product-orig">一字剪</div>
+<div class="product-price">¥4</div>
+</div>
+<div class="product-card" data-cat="cuticle" data-name="TEZE Rhinestone Remover Scissors"><div class="product-img-wrap"><img alt="TEZE Rhinestone Remover Scissors" loading="lazy" src="product-images/product_081.jpg"/></div>
+<div class="product-name">TEZE Rhinestone Remover Scissors</div>
+<div class="product-orig">TEZE卸钻剪</div>
+<div class="product-price">¥25</div>
+</div>
+<div class="product-card" data-cat="cuticle" data-name="Rhinestone Remover Scissors"><div class="product-img-wrap"><img alt="Rhinestone Remover Scissors" loading="lazy" src="product-images/product_080.jpg"/></div>
+<div class="product-name">Rhinestone Remover Scissors</div>
+<div class="product-orig">卸钻剪</div>
+<div class="product-price">¥20</div>
+</div>
+</div>
+</div>
+<!-- BRUSHES & PENS -->
+<div class="cat-section" data-section="tools">
+<div class="section-sep"><span class="section-emoji">🖌️</span><h2 data-i18n="cat_tools">Brushes &amp; Pens</h2><hr/></div>
+<div class="product-grid">
+<div class="product-card" data-cat="tools" data-name="Long Dust Brush"><div class="product-img-wrap"><img alt="Long Dust Brush" loading="lazy" src="product-images/product_079.jpg"/></div>
+<div class="product-name">Long Dust Brush</div>
+<div class="product-orig">灰尘扫长款</div>
+<div class="product-price">¥10</div>
+</div>
+<div class="product-card" data-cat="tools" data-name="Mushroom Dust Brush"><div class="product-img-wrap"><img alt="Mushroom Dust Brush" loading="lazy" src="product-images/product_078.jpg"/></div>
+<div class="product-name">Mushroom Dust Brush</div>
+<div class="product-orig">蘑菇粉尘刷</div>
+<div class="product-price">¥8</div>
+</div>
+<div class="product-card" data-cat="tools" data-name="Shaping Clip"><div class="product-img-wrap"><img alt="Shaping Clip" loading="lazy" src="product-images/product_077.jpg"/></div>
+<div class="product-name">Shaping Clip</div>
+<div class="product-orig">塑形夹</div>
+<div class="product-price">¥4</div>
+</div>
+<div class="product-card" data-cat="tools" data-name="Small Scissors"><div class="product-img-wrap"><img alt="Small Scissors" loading="lazy" src="product-images/product_076.jpg"/></div>
+<div class="product-name">Small Scissors</div>
+<div class="product-orig">小剪刀</div>
+<div class="product-price">¥5</div>
+</div>
+<div class="product-card" data-cat="tools" data-name="Gel Mixing Stick"><div class="product-img-wrap"><img alt="Gel Mixing Stick" loading="lazy" src="product-images/product_075.jpg"/></div>
+<div class="product-name">Gel Mixing Stick</div>
+<div class="product-orig">调胶棒</div>
+<div class="product-price">¥8</div>
+</div>
+<div class="product-card" data-cat="tools" data-name="Lint Roller + Pen Set"><div class="product-img-wrap"><img alt="Lint Roller + Pen Set" loading="lazy" src="product-images/product_074.jpg"/></div>
+<div class="product-name">Lint Roller + Pen Set</div>
+<div class="product-orig">抓抓棉+抓抓笔套装</div>
+<div class="product-price">¥15</div>
+</div>
+<div class="product-card" data-cat="tools" data-name="Moscho Dual-Head Silicone Pen GN"><div class="product-img-wrap"><img alt="Moscho Dual-Head Silicone Pen GN" loading="lazy" src="product-images/product_073.jpg"/></div>
+<div class="product-name">Moscho Dual-Head Silicone Pen</div>
+<div class="product-orig">末町GN双头硅胶笔</div>
+<div class="product-price">¥9.8</div>
+</div>
+<div class="product-card" data-cat="tools" data-name="Moscho Dual-Head Dotting Pen GZ"><div class="product-img-wrap"><img alt="Moscho Dual-Head Dotting Pen GZ" loading="lazy" src="product-images/product_072.jpg"/></div>
+<div class="product-name">Moscho Dual-Head Dotting Pen</div>
+<div class="product-orig">末町GZ双头点珠笔</div>
+<div class="product-price">¥5.8</div>
+</div>
+<div class="product-card" data-cat="tools" data-name="Dotting Pen"><div class="product-img-wrap"><img alt="Dotting Pen" loading="lazy" src="product-images/product_071.jpg"/></div>
+<div class="product-name">Dotting Pen</div>
+<div class="product-orig">点珠笔</div>
+<div class="product-price">¥5</div>
+</div>
+<div class="product-card" data-cat="tools" data-name="LUCKY Nail Art Brush Set 9pcs"><div class="product-img-wrap"><img alt="LUCKY Nail Art Brush Set 9pcs" loading="lazy" src="product-images/product_027.jpg"/></div>
+<div class="product-name">LUCKY Nail Art Brush Set</div>
+<div class="product-orig">LUCKY美甲笔 9支装</div>
+<div class="product-price">¥208</div>
+<span class="product-note">9-piece set</span>
+</div>
+<div class="product-card" data-cat="tools" data-name="Green Brush Case"><div class="product-img-wrap"><img alt="Green Brush Case" loading="lazy" src="product-images/product_026.jpg"/></div>
+<div class="product-name">Green Brush Case</div>
+<div class="product-orig">绿色笔套</div>
+<div class="product-price">¥68</div>
+</div>
+<div class="product-card" data-cat="tools" data-name="Brown 9-Piece Brush Set"><div class="product-img-wrap"><img alt="Brown 9-Piece Brush Set" loading="lazy" src="product-images/product_025.jpg"/></div>
+<div class="product-name">Brown 9-Piece Brush Set</div>
+<div class="product-orig">咖啡色9支装套笔</div>
+<div class="product-price">¥35</div>
+<span class="product-note">9-piece set</span>
+</div>
+</div>
+</div>
+<!-- OILS & LIQUIDS -->
+<div class="cat-section" data-section="liquids">
+<div class="section-sep"><span class="section-emoji">💧</span><h2 data-i18n="cat_liquids">Oils &amp; Liquids</h2><hr/></div>
+<div class="product-grid">
+<div class="product-card" data-cat="liquids" data-name="Antee Cuticle Oil"><div class="product-img-wrap"><img alt="Antee Cuticle Oil" loading="lazy" src="product-images/product_104.jpg"/></div>
+<div class="product-name">Antee Cuticle Oil</div>
+<div class="product-orig">安缇指缘油</div>
+<div class="product-price">¥32</div>
+</div>
+<div class="product-card" data-cat="liquids" data-name="Tianmei Nourishing Oil"><div class="product-img-wrap"><img alt="Tianmei Nourishing Oil" loading="lazy" src="product-images/product_070.jpg"/></div>
+<div class="product-name">Tianmei Nourishing Oil</div>
+<div class="product-orig">天美营养油</div>
+<div class="product-price">¥18</div>
+</div>
+<div class="product-card" data-cat="liquids" data-name="Cuticle Oil Pen"><div class="product-img-wrap"><img alt="Cuticle Oil Pen" loading="lazy" src="product-images/product_069.jpg"/></div>
+<div class="product-name">Cuticle Oil Pen</div>
+<div class="product-orig">营养笔</div>
+<div class="product-price">¥1.5</div>
+</div>
+<div class="product-card" data-cat="liquids" data-name="Moscho Cuticle Softener"><div class="product-img-wrap"><img alt="Moscho Cuticle Softener" loading="lazy" src="product-images/product_068.jpg"/></div>
+<div class="product-name">Moscho Cuticle Softener</div>
+<div class="product-orig">末町软化剂</div>
+<div class="product-price">¥18</div>
+</div>
+<div class="product-card" data-cat="liquids" data-name="Nourishing Oil Softener Top Coat"><div class="product-img-wrap"><img alt="Nourishing Oil Softener Top Coat" loading="lazy" src="product-images/product_067.jpg"/></div>
+<div class="product-name">Nourishing Oil / Softener / Top Coat</div>
+<div class="product-orig">营养油 · 软化剂 · 亮油</div>
+<div class="product-price">¥2</div>
+</div>
+<div class="product-card" data-cat="liquids" data-name="Nail Remover Polish Remover Cleaner"><div class="product-img-wrap"><img alt="Nail Remover Polish Remover Cleaner" loading="lazy" src="product-images/product_066.jpg"/></div>
+<div class="product-name">Nail Remover / Polish Remover / Cleaner</div>
+<div class="product-orig">卸甲水 · 洗甲水 · 啫喱水</div>
+<div class="product-price">¥15</div>
+</div>
+<div class="product-card" data-cat="liquids" data-name="Osha Cleaner"><div class="product-img-wrap"><img alt="Osha Cleaner" loading="lazy" src="product-images/product_065.jpg"/></div>
+<div class="product-name">Osha Cleaner</div>
+<div class="product-orig">欧莎清洁水</div>
+<div class="product-price">¥28</div>
+<span class="product-note">1000ml</span>
+</div>
+<div class="product-card" data-cat="liquids" data-name="Osha Nail Remover"><div class="product-img-wrap"><img alt="Osha Nail Remover" loading="lazy" src="product-images/product_064.jpg"/></div>
+<div class="product-name">Osha Nail Remover</div>
+<div class="product-orig">欧莎卸甲水</div>
+<div class="product-price">¥28</div>
+<span class="product-note">1000ml</span>
+</div>
+<div class="product-card" data-cat="liquids" data-name="Alcohol 75% 95%"><div class="product-img-wrap"><img alt="Alcohol 75% 95%" loading="lazy" src="product-images/product_063.jpg"/></div>
+<div class="product-name">Alcohol 75% / 95%</div>
+<div class="product-orig">酒精75%、95%</div>
+<div class="product-price">¥10 / ¥12</div>
+</div>
+<div class="product-card" data-cat="liquids" data-name="Soak-Off Remover Pack"><div class="product-img-wrap"><img alt="Soak-Off Remover Pack" loading="lazy" src="product-images/product_062.jpg"/></div>
+<div class="product-name">Soak-Off Remover Pack</div>
+<div class="product-orig">卸甲包</div>
+<div class="product-price">¥15</div>
+</div>
+</div>
+</div>
+<!-- SUPPLIES & ACCESSORIES -->
+<div class="cat-section" data-section="supplies">
+<div class="section-sep"><span class="section-emoji">📦</span><h2 data-i18n="cat_supplies">Supplies &amp; Accessories</h2><hr/></div>
+<div class="product-grid">
+<div class="product-card" data-cat="supplies" data-name="Moscho Press Bottle"><div class="product-img-wrap"><img alt="Moscho Press Bottle" loading="lazy" src="product-images/product_061.jpg"/></div>
+<div class="product-name">Moscho Press Bottle</div>
+<div class="product-orig">末町按压瓶</div>
+<div class="product-price">¥8</div>
+</div>
+<div class="product-card" data-cat="supplies" data-name="Press Bottle"><div class="product-img-wrap"><img alt="Press Bottle" loading="lazy" src="product-images/product_060.jpg"/></div>
+<div class="product-name">Press Bottle</div>
+<div class="product-orig">按压瓶</div>
+<div class="product-price">¥3</div>
+</div>
+<div class="product-card" data-cat="supplies" data-name="Moscho Alcohol Bottle"><div class="product-img-wrap"><img alt="Moscho Alcohol Bottle" loading="lazy" src="product-images/product_059.jpg"/></div>
+<div class="product-name">Moscho Alcohol Bottle</div>
+<div class="product-orig">末町酒精瓶</div>
+<div class="product-price">¥8</div>
+</div>
+<div class="product-card" data-cat="supplies" data-name="Spray Bottle"><div class="product-img-wrap"><img alt="Spray Bottle" loading="lazy" src="product-images/product_058.jpg"/></div>
+<div class="product-name">Spray Bottle <em style="color:var(--muted);font-style:normal;">(random color)</em></div>
+<div class="product-orig">喷瓶（颜色随机）</div>
+<div class="product-price">¥2</div>
+</div>
+<div class="product-card" data-cat="supplies" data-name="Cotton Pads"><div class="product-img-wrap"><img alt="Cotton Pads" loading="lazy" src="product-images/product_057.jpg"/></div>
+<div class="product-name">Cotton Pads</div>
+<div class="product-orig">棉片</div>
+<div class="product-price">¥5</div>
+</div>
+<div class="product-card" data-cat="supplies" data-name="Moscho Cotton Pad Storage Box"><div class="product-img-wrap"><img alt="Moscho Cotton Pad Storage Box" loading="lazy" src="product-images/product_056.jpg"/></div>
+<div class="product-name">Moscho Cotton Pad Storage Box</div>
+<div class="product-orig">末町棉片收纳盒</div>
+<div class="product-price">¥20</div>
+</div>
+<div class="product-card" data-cat="supplies" data-name="Cotton Pad Box"><div class="product-img-wrap"><img alt="Cotton Pad Box" loading="lazy" src="product-images/product_055.jpg"/></div>
+<div class="product-name">Cotton Pad Box</div>
+<div class="product-orig">棉片盒</div>
+<div class="product-price">¥5</div>
+</div>
+<div class="product-card" data-cat="supplies" data-name="Clear Double-Sided Tape"><div class="product-img-wrap"><img alt="Clear Double-Sided Tape" loading="lazy" src="product-images/product_054.jpg"/></div>
+<div class="product-name">Clear Double-Sided Tape</div>
+<div class="product-orig">透明双面胶</div>
+<div class="product-price">¥8</div>
+</div>
+<div class="product-card" data-cat="supplies" data-name="Wooden Nail Holder"><div class="product-img-wrap"><img alt="Wooden Nail Holder" loading="lazy" src="product-images/product_053.jpg"/></div>
+<div class="product-name">Wooden Nail Holder</div>
+<div class="product-orig">原木甲托</div>
+<div class="product-price">¥10</div>
+</div>
+<div class="product-card" data-cat="supplies" data-name="Trendy Irregular Nail Holder"><div class="product-img-wrap"><img alt="Trendy Irregular Nail Holder" loading="lazy" src="product-images/product_052.jpg"/></div>
+<div class="product-name">Trendy Irregular Nail Holder</div>
+<div class="product-orig">潮IN不规则甲托</div>
+<div class="product-price">¥10</div>
+</div>
+<div class="product-card" data-cat="supplies" data-name="Soak Bowl single layer"><div class="product-img-wrap"><img alt="Soak Bowl single layer" loading="lazy" src="product-images/product_051.jpg"/></div>
+<div class="product-name">Soak Bowl <em style="color:var(--muted);font-style:normal;">(single layer)</em></div>
+<div class="product-orig">泡手碗（单层）</div>
+<div class="product-price">¥2</div>
+</div>
+<div class="product-card" data-cat="supplies" data-name="Soak Bowl double layer"><div class="product-img-wrap"><img alt="Soak Bowl double layer" loading="lazy" src="product-images/product_051.jpg"/></div>
+<div class="product-name">Soak Bowl <em style="color:var(--muted);font-style:normal;">(double layer)</em></div>
+<div class="product-orig">泡手碗（双层）</div>
+<div class="product-price">¥5</div>
+</div>
+<div class="product-card" data-cat="supplies" data-name="5-in-1 Magnet"><div class="product-img-wrap"><img alt="5-in-1 Magnet" loading="lazy" src="product-images/product_050.jpg"/></div>
+<div class="product-name">5-in-1 Magnet</div>
+<div class="product-orig">五合一磁铁</div>
+<div class="product-price">¥15</div>
+</div>
+<div class="product-card" data-cat="supplies" data-name="Staff Magnet"><div class="product-img-wrap"><img alt="Staff Magnet" loading="lazy" src="product-images/product_049.jpg"/></div>
+<div class="product-name">Staff Magnet</div>
+<div class="product-orig">金箍棒磁铁</div>
+<div class="product-price">¥12</div>
+</div>
+<div class="product-card" data-cat="supplies" data-name="Cigar Magnet"><div class="product-img-wrap"><img alt="Cigar Magnet" loading="lazy" src="product-images/product_048.jpg"/></div>
+<div class="product-name">Cigar Magnet</div>
+<div class="product-orig">雪茄磁铁</div>
+<div class="product-price">¥8</div>
+</div>
+<div class="product-card" data-cat="supplies" data-name="Square Magnet"><div class="product-img-wrap"><img alt="Square Magnet" loading="lazy" src="product-images/product_047.jpg"/></div>
+<div class="product-name">Square Magnet</div>
+<div class="product-orig">方形磁铁</div>
+<div class="product-price">¥5</div>
+</div>
+<div class="product-card" data-cat="supplies" data-name="Round Magnet"><div class="product-img-wrap"><img alt="Round Magnet" loading="lazy" src="product-images/product_046.jpg"/></div>
+<div class="product-name">Round Magnet</div>
+<div class="product-orig">圆形磁铁</div>
+<div class="product-price">¥3</div>
+</div>
+</div>
+</div>
+<!-- ARM RESTS -->
+<div class="cat-section" data-section="armrests">
+<div class="section-sep"><span class="section-emoji">🛋️</span><h2 data-i18n="cat_armrests">Arm Rests</h2><hr/></div>
+<div class="product-grid">
+<div class="product-card" data-cat="armrests" data-name="Ultra-Soft Butterfly Arm Rest"><div class="product-img-wrap"><img alt="Ultra-Soft Butterfly Arm Rest" loading="lazy" src="product-images/product_045.jpg"/></div>
+<div class="product-name">Ultra-Soft Butterfly Arm Rest</div>
+<div class="product-orig">超软蝴蝶手枕</div>
+<div class="product-price">¥118</div>
+<span class="product-note">Black or White</span>
+</div>
+<div class="product-card" data-cat="armrests" data-name="U1 Dual-Hand Arm Rest"><div class="product-img-wrap"><img alt="U1 Dual-Hand Arm Rest" loading="lazy" src="product-images/product_044.jpg"/></div>
+<div class="product-name">U1 Dual-Hand Arm Rest</div>
+<div class="product-orig">U1双手手枕</div>
+<div class="product-price">¥80</div>
+<span class="product-note">Black or White</span>
+</div>
+<div class="product-card" data-cat="armrests" data-name="Wooden Arm Rest"><div class="product-img-wrap"><img alt="Wooden Arm Rest" loading="lazy" src="product-images/product_043.jpg"/></div>
+<div class="product-name">Wooden Arm Rest</div>
+<div class="product-orig">原木手枕（高/矮多色可选）</div>
+<div class="product-price">¥35</div>
+<span class="product-note">Multiple heights &amp; colors</span>
+</div>
+<div class="product-card" data-cat="armrests" data-name="Russian Minimalist Arm Rest"><div class="product-img-wrap"><img alt="Russian Minimalist Arm Rest" loading="lazy" src="product-images/product_042.jpg"/></div>
+<div class="product-name">Russian Minimalist Arm Rest</div>
+<div class="product-orig">俄式极简风手枕</div>
+<div class="product-price">¥28</div>
+</div>
+</div>
+</div>
+<!-- LAMPS -->
+<div class="cat-section" data-section="lamps">
+<div class="section-sep"><span class="section-emoji">💡</span><h2 data-i18n="cat_lamps">Lamps</h2><hr/></div>
+<div class="product-grid">
+<div class="product-card" data-cat="lamps" data-name="2-in-1 Rechargeable UV LED Lamp"><div class="product-img-wrap"><img alt="2-in-1 Rechargeable UV LED Lamp" loading="lazy" src="product-images/product_040.jpg"/></div>
+<div class="product-name">2-in-1 Rechargeable UV/LED Lamp</div>
+<div class="product-orig">二合一蓄电款光疗灯</div>
+<div class="product-price">¥338</div>
+</div>
+<div class="product-card" data-cat="lamps" data-name="802 Rechargeable UV LED Lamp"><div class="product-img-wrap"><img alt="802 Rechargeable UV LED Lamp" loading="lazy" src="product-images/product_105.jpg"/></div>
+<div class="product-name">802 Rechargeable UV/LED Lamp</div>
+<div class="product-orig">802蓄电款光疗灯</div>
+<div class="product-price">¥298</div>
+</div>
+<div class="product-card" data-cat="lamps" data-name="Lucky Dual-Hand Arm Rest Lamp"><div class="product-img-wrap"><img alt="Lucky Dual-Hand Arm Rest Lamp" loading="lazy" src="product-images/product_039.jpg"/></div>
+<div class="product-name">Lucky Dual-Hand Arm Rest Lamp</div>
+<div class="product-orig">Lucky双手手枕灯</div>
+<div class="product-price">¥188</div>
+</div>
+<div class="product-card" data-cat="lamps" data-name="X6 Plug-In UV LED Lamp"><div class="product-img-wrap"><img alt="X6 Plug-In UV LED Lamp" loading="lazy" src="product-images/product_038.jpg"/></div>
+<div class="product-name">X6 Plug-In UV/LED Lamp</div>
+<div class="product-orig">X6插电款光疗灯</div>
+<div class="product-price">¥158</div>
+</div>
+<div class="product-card" data-cat="lamps" data-name="Ring Fill Light"><div class="product-img-wrap"><img alt="Ring Fill Light" loading="lazy" src="product-images/product_041.jpg"/></div>
+<div class="product-name">Ring / Fill Light</div>
+<div class="product-orig">补光灯</div>
+<div class="product-price">¥158</div>
+</div>
+<div class="product-card" data-cat="lamps" data-name="Moscho Handheld Nail Lamp"><div class="product-img-wrap"><img alt="Moscho Handheld Nail Lamp" loading="lazy" src="product-images/product_108.jpg"/></div>
+<div class="product-name">Moscho Handheld Nail Lamp</div>
+<div class="product-orig">末町手持灯</div>
+<div class="product-price">¥98</div>
+</div>
+<div class="product-card" data-cat="lamps" data-name="Sun23 Foot Lamp"><div class="product-img-wrap"><img alt="Sun23 Foot Lamp" loading="lazy" src="product-images/product_098.jpg"/></div>
+<div class="product-name">Sun23 Foot Lamp</div>
+<div class="product-orig">Sun23灯</div>
+<div class="product-price">¥88</div>
+</div>
+<div class="product-card" data-cat="lamps" data-name="Saierqi Strip Light Stand"><div class="product-img-wrap"><img alt="Saierqi Strip Light Stand" loading="lazy" src="product-images/product_029.jpg"/></div>
+<div class="product-name">Saierqi Strip Light Stand</div>
+<div class="product-orig">赛迩齐一字灯带支架</div>
+<div class="product-price">¥45</div>
+<span class="product-note">Random color</span>
+</div>
+<div class="product-card" data-cat="lamps" data-name="Silver Handheld Strip Light"><div class="product-img-wrap"><img alt="Silver Handheld Strip Light" loading="lazy" src="product-images/product_028.jpg"/></div>
+<div class="product-name">Silver Handheld Strip Light</div>
+<div class="product-orig">银色手持一字灯</div>
+<div class="product-price">¥30</div>
+</div>
+</div>
+</div>
+<!-- DUST COLLECTORS -->
+<div class="cat-section" data-section="dust">
+<div class="section-sep"><span class="section-emoji">🌀</span><h2 data-i18n="cat_dust">Dust Collectors</h2><hr/></div>
+<div class="product-grid">
+<div class="product-card" data-cat="dust" data-name="Saierqi Rechargeable Dust Collector"><div class="product-img-wrap"><img alt="Saierqi Rechargeable Dust Collector" loading="lazy" src="product-images/product_037.jpg"/></div>
+<div class="product-name">Saierqi Rechargeable Dust Collector</div>
+<div class="product-orig">赛迩齐蓄电款吸尘器</div>
+<div class="product-price">¥248</div>
+</div>
+<div class="product-card" data-cat="dust" data-name="Mini Nail Dust Collector"><div class="product-img-wrap"><img alt="Mini Nail Dust Collector" loading="lazy" src="product-images/product_106.jpg"/></div>
+<div class="product-name">Mini Nail Dust Collector</div>
+<div class="product-orig">迷你吸尘器</div>
+<div class="product-price">¥178</div>
+</div>
+<div class="product-card" data-cat="dust" data-name="2-Speed Plug-In Dust Collector"><div class="product-img-wrap"><img alt="2-Speed Plug-In Dust Collector" loading="lazy" src="product-images/product_036.jpg"/></div>
+<div class="product-name">2-Speed Plug-In Dust Collector</div>
+<div class="product-orig">2挡插电款吸尘器</div>
+<div class="product-price">¥110</div>
+</div>
+</div>
+</div>
+<!-- NAIL DRILLS -->
+<div class="cat-section" data-section="drills">
+<div class="section-sep"><span class="section-emoji">⚙️</span><h2 data-i18n="cat_drills">Nail Drills &amp; Equipment</h2><hr/></div>
+<div class="product-grid">
+<div class="product-card" data-cat="drills" data-name="902 Suede Nail Drill"><div class="product-img-wrap"><img alt="902 Suede Nail Drill" loading="lazy" src="product-images/product_035.jpg"/></div>
+<div class="product-name">902 Suede Nail Drill</div>
+<div class="product-orig">902小羊皮打磨机</div>
+<div class="product-price">¥308</div>
+<span class="product-note">4 colors</span>
+</div>
+<div class="product-card" data-cat="drills" data-name="Hollow Cup Nail Drill"><div class="product-img-wrap"><img alt="Hollow Cup Nail Drill" loading="lazy" src="product-images/product_107.jpg"/></div>
+<div class="product-name">Hollow Cup Nail Drill</div>
+<div class="product-orig">空心杯打磨机</div>
+<div class="product-price">¥199</div>
+</div>
+<div class="product-card" data-cat="drills" data-name="TP303 Portable Nail Drill"><div class="product-img-wrap"><img alt="TP303 Portable Nail Drill" loading="lazy" src="product-images/product_034.jpg"/></div>
+<div class="product-name">TP303 Portable Nail Drill</div>
+<div class="product-orig">TP303便携打磨机</div>
+<div class="product-price">¥198</div>
+</div>
+<div class="product-card" data-cat="drills" data-name="M11 Nail Drill"><div class="product-img-wrap"><img alt="M11 Nail Drill" loading="lazy" src="product-images/product_033.jpg"/></div>
+<div class="product-name">M11 Nail Drill</div>
+<div class="product-orig">M11打磨机</div>
+<div class="product-price">¥128</div>
+</div>
+<div class="product-card" data-cat="drills" data-name="Saierqi S5 UV Sterilizer Box"><div class="product-img-wrap"><img alt="Saierqi S5 UV Sterilizer Box" loading="lazy" src="product-images/product_032.jpg"/></div>
+<div class="product-name">Saierqi S5 UV Sterilizer Box</div>
+<div class="product-orig">赛迩齐S5消毒盒</div>
+<div class="product-price">¥128</div>
+</div>
+<div class="product-card" data-cat="drills" data-name="LS Drill Bits"><div class="product-img-wrap"><img alt="LS Drill Bits" loading="lazy" src="product-images/product_031.jpg"/></div>
+<div class="product-name">LS Drill Bits</div>
+<div class="product-orig">LS-打磨头</div>
+<div class="product-price">¥15 / ¥35</div>
+</div>
+<div class="product-card" data-cat="drills" data-name="Vintage Nail Drill Storage Box"><div class="product-img-wrap"><img alt="Vintage Nail Drill Storage Box" loading="lazy" src="product-images/product_030.jpg"/></div>
+<div class="product-name">Vintage Nail Drill Storage Box</div>
+<div class="product-orig">中古风打磨机收纳盒</div>
+<div class="product-price">¥20</div>
+</div>
+</div>
+</div>
+<!-- TIPS & GEL -->
+<div class="cat-section" data-section="gel">
+<div class="section-sep"><span class="section-emoji">💅</span><h2 data-i18n="cat_gel">Nail Tips &amp; Gel</h2><hr/></div>
+<div class="product-grid">
+<div class="product-card" data-cat="gel" data-name="Moscho 6-Style New Nail Tips"><div class="product-img-wrap"><img alt="Moscho 6-Style New Nail Tips" loading="lazy" src="product-images/product_024.jpg"/></div>
+<div class="product-name">Moscho 6-Style New Nail Tips</div>
+<div class="product-orig">末町6款新款甲片</div>
+<div class="product-price">¥39</div>
+</div>
+<div class="product-card" data-cat="gel" data-name="European-Style Nail Tips 500pcs"><div class="product-img-wrap"><img alt="European-Style Nail Tips 500pcs" loading="lazy" src="product-images/product_023.jpg"/></div>
+<div class="product-name">European-Style Nail Tips 500pcs</div>
+<div class="product-orig">欧美甲片500片</div>
+<div class="product-price">¥35</div>
+<span class="product-note">Multiple shapes</span>
+</div>
+<div class="product-card" data-cat="gel" data-name="MUSI Nail Tips"><div class="product-img-wrap"><img alt="MUSI Nail Tips" loading="lazy" src="product-images/product_022.jpg"/></div>
+<div class="product-name">MUSI Nail Tips</div>
+<div class="product-orig">MUSI甲片</div>
+<div class="product-price">¥20</div>
+<span class="product-note">Multiple shapes</span>
+</div>
+<div class="product-card" data-cat="gel" data-name="Extra-Long 240pcs Clear Nail Tips"><div class="product-img-wrap"><img alt="Extra-Long 240pcs Clear Nail Tips" loading="lazy" src="product-images/product_021.jpg"/></div>
+<div class="product-name">Extra-Long Clear Nail Tips 240pcs</div>
+<div class="product-orig">超长240片透明甲片</div>
+<div class="product-price">¥12</div>
+</div>
+<div class="product-card" data-cat="gel" data-name="Gold Paper Nail Form"><div class="product-img-wrap"><img alt="Gold Paper Nail Form" loading="lazy" src="product-images/product_012.jpg"/></div>
+<div class="product-name">Gold Paper Nail Form</div>
+<div class="product-orig">金色纸托</div>
+<div class="product-price">¥12</div>
+</div>
+<div class="product-card" data-cat="gel" data-name="Nail Tip Adhesive"><div class="product-img-wrap"><img alt="Nail Tip Adhesive" loading="lazy" src="product-images/product_020.jpg"/></div>
+<div class="product-name">Nail Tip Adhesive</div>
+<div class="product-orig">甲片粘合剂</div>
+<div class="product-price">¥18</div>
+</div>
+<div class="product-card" data-cat="gel" data-name="Moscho Quick-Dry Nail Glue"><div class="product-img-wrap"><img alt="Moscho Quick-Dry Nail Glue" loading="lazy" src="product-images/product_019.jpg"/></div>
+<div class="product-name">Moscho Quick-Dry Nail Glue</div>
+<div class="product-orig">末町速干胶水</div>
+<div class="product-price">¥10</div>
+</div>
+<div class="product-card" data-cat="gel" data-name="GUO Nail Glue"><div class="product-img-wrap"><img alt="GUO Nail Glue" loading="lazy" src="product-images/product_018.jpg"/></div>
+<div class="product-name">GUO Nail Glue</div>
+<div class="product-orig">GUO胶水</div>
+<div class="product-price">¥10</div>
+</div>
+<div class="product-card" data-cat="gel" data-name="Nail Tip Glue"><div class="product-img-wrap"><img alt="Nail Tip Glue" loading="lazy" src="product-images/product_017.jpg"/></div>
+<div class="product-name">Nail Tip Glue</div>
+<div class="product-orig">甲片胶水</div>
+<div class="product-price">¥5</div>
+</div>
+<div class="product-card" data-cat="gel" data-name="Beiou Builder Gel"><div class="product-img-wrap"><img alt="Beiou Builder Gel" loading="lazy" src="product-images/product_109.jpg"/></div>
+<div class="product-name">Beiou Builder Gel</div>
+<div class="product-orig">北鸥功能胶</div>
+<div class="product-price">¥15.8</div>
+</div>
+<div class="product-card" data-cat="gel" data-name="Xianweike Builder Gel"><div class="product-img-wrap"><img alt="Xianweike Builder Gel" loading="lazy" src="product-images/product_110.jpg"/></div>
+<div class="product-name">Xianweike Builder Gel</div>
+<div class="product-orig">仙维蔻功能胶</div>
+<div class="product-price">¥25</div>
+</div>
+<div class="product-card" data-cat="gel" data-name="Moscho Bottle Builder Gel"><div class="product-img-wrap"><img alt="Moscho Bottle Builder Gel" loading="lazy" src="product-images/product_112.jpg"/></div>
+<div class="product-name">Moscho Builder Gel (Bottle)</div>
+<div class="product-orig">末町瓶装功能胶</div>
+<div class="product-price">¥32</div>
+</div>
+<div class="product-card" data-cat="gel" data-name="Moscho Jar Builder Gel"><div class="product-img-wrap"><img alt="Moscho Jar Builder Gel" loading="lazy" src="product-images/product_111.jpg"/></div>
+<div class="product-name">Moscho Builder Gel (Jar)</div>
+<div class="product-orig">末町罐装功能胶</div>
+<div class="product-price">¥40</div>
+</div>
+<div class="product-card" data-cat="gel" data-name="Moscho F06 No-Wipe Rhinestone Gel"><div class="product-img-wrap"><img alt="Moscho F06 No-Wipe Rhinestone Gel" loading="lazy" src="product-images/product_016.jpg"/></div>
+<div class="product-name">Moscho F06 No-Wipe Rhinestone Gel</div>
+<div class="product-orig">末町F06免洗粘钻胶</div>
+<div class="product-price">¥40</div>
+<span class="product-note">20g</span>
+</div>
+<div class="product-card" data-cat="gel" data-name="Moscho F21 Sculpting Extension Gel"><div class="product-img-wrap"><img alt="Moscho F21 Sculpting Extension Gel" loading="lazy" src="product-images/product_015.jpg"/></div>
+<div class="product-name">Moscho F21 Sculpting Extension Gel</div>
+<div class="product-orig">末町F21塑形延长凝胶</div>
+<div class="product-price">¥40</div>
+<span class="product-note">20g</span>
+</div>
+<div class="product-card" data-cat="gel" data-name="LUCKY Builder Gel large"><div class="product-img-wrap"><img alt="LUCKY Builder Gel large" loading="lazy" src="product-images/product_014.jpg"/></div>
+<div class="product-name">LUCKY Builder Gel (Large)</div>
+<div class="product-orig">LUCKY光疗胶（大）</div>
+<div class="product-price">¥85</div>
+</div>
+<div class="product-card" data-cat="gel" data-name="LUCKY Builder Gel small"><div class="product-img-wrap"><img alt="LUCKY Builder Gel small" loading="lazy" src="product-images/product_014.jpg"/></div>
+<div class="product-name">LUCKY Builder Gel (Small)</div>
+<div class="product-orig">LUCKY光疗胶（小）</div>
+<div class="product-price">¥48</div>
+</div>
+<div class="product-card" data-cat="gel" data-name="MUSI GEL Silver Bottle large"><div class="product-img-wrap"><img alt="MUSI GEL Silver Bottle large" loading="lazy" src="product-images/product_013.jpg"/></div>
+<div class="product-name">MUSI GEL Silver Bottle (Large)</div>
+<div class="product-orig">MUSI GEL银瓶光疗胶（大）</div>
+<div class="product-price">¥78</div>
+</div>
+<div class="product-card" data-cat="gel" data-name="MUSI GEL Silver Bottle small"><div class="product-img-wrap"><img alt="MUSI GEL Silver Bottle small" loading="lazy" src="product-images/product_013.jpg"/></div>
+<div class="product-name">MUSI GEL Silver Bottle (Small)</div>
+<div class="product-orig">MUSI GEL银瓶光疗胶（小）</div>
+<div class="product-price">¥48</div>
+</div>
+<div class="product-card" data-cat="gel" data-name="Brush Cleaner"><div class="product-img-wrap"><img alt="Brush Cleaner" loading="lazy" src="product-images/product_011.jpg"/></div>
+<div class="product-name">Brush Cleaner</div>
+<div class="product-orig">洗笔水</div>
+<div class="product-price">¥25</div>
+</div>
+<div class="product-card" data-cat="gel" data-name="Butterfly Brush Cleaning Cup"><div class="product-img-wrap"><img alt="Butterfly Brush Cleaning Cup" loading="lazy" src="product-images/product_010.jpg"/></div>
+<div class="product-name">Butterfly Brush Cleaning Cup</div>
+<div class="product-orig">蝴蝶洗笔杯</div>
+<div class="product-price">¥18</div>
+<span class="product-note">Random color</span>
+</div>
+<div class="product-card" data-cat="gel" data-name="Moscho PW Brush Cleaning Cup"><div class="product-img-wrap"><img alt="Moscho PW Brush Cleaning Cup" loading="lazy" src="product-images/product_009.jpg"/></div>
+<div class="product-name">Moscho PW Brush Cleaning Cup</div>
+<div class="product-orig">末町PW洗笔杯</div>
+<div class="product-price">¥12</div>
+</div>
+<div class="product-card" data-cat="gel" data-name="Simple Brush Cleaning Cup"><div class="product-img-wrap"><img alt="Simple Brush Cleaning Cup" loading="lazy" src="product-images/product_008.jpg"/></div>
+<div class="product-name">Simple Brush Cleaning Cup</div>
+<div class="product-orig">简约洗笔杯</div>
+<div class="product-price">¥5</div>
+<span class="product-note">Random color</span>
+</div>
+<div class="product-card" data-cat="gel" data-name="Crystal Cup"><div class="product-img-wrap"><img alt="Crystal Cup" loading="lazy" src="product-images/product_007.jpg"/></div>
+<div class="product-name">Crystal Cup</div>
+<div class="product-orig">水晶杯</div>
+<div class="product-price">¥2</div>
+</div>
+</div>
+</div>
+<!-- PPE & HYGIENE -->
+<div class="cat-section" data-section="hygiene">
+<div class="section-sep"><span class="section-emoji">🧤</span><h2 data-i18n="cat_hygiene">PPE &amp; Hygiene</h2><hr/></div>
+<div class="product-grid">
+<div class="product-card" data-cat="hygiene" data-name="Gloves S M L"><div class="product-img-wrap"><img alt="Gloves S M L" loading="lazy" src="product-images/product_006.jpg"/></div>
+<div class="product-name">Gloves (S / M / L)</div>
+<div class="product-orig">手套(S、M、L)</div>
+<div class="product-price">¥10</div>
+<span class="product-note">50/box</span>
+</div>
+<div class="product-card" data-cat="hygiene" data-name="Anti-Stain Gloves Black White"><div class="product-img-wrap"><img alt="Anti-Stain Gloves Black White" loading="lazy" src="product-images/product_005.jpg"/></div>
+<div class="product-name">Anti-Stain Gloves</div>
+<div class="product-orig">防黑手套（黑/白）</div>
+<div class="product-price">¥4</div>
+<span class="product-note">Black or White</span>
+</div>
+<div class="product-card" data-cat="hygiene" data-name="Masks face mask"><div class="product-img-wrap"><img alt="Masks face mask" loading="lazy" src="product-images/product_004.jpg"/></div>
+<div class="product-name">Masks</div>
+<div class="product-orig">口罩</div>
+<div class="product-price">¥8</div>
+<span class="product-note">50/box</span>
+</div>
+<div class="product-card" data-cat="hygiene" data-name="Roll Towels paper towels"><div class="product-img-wrap"><img alt="Roll Towels paper towels" loading="lazy" src="product-images/product_003.jpg"/></div>
+<div class="product-name">Roll Towels</div>
+<div class="product-orig">卷巾</div>
+<div class="product-price">¥8</div>
+</div>
+</div>
+</div>
+<!-- FOOT CARE -->
+<div class="cat-section" data-section="foot">
+<div class="section-sep"><span class="section-emoji">🦶</span><h2 data-i18n="cat_foot">Foot Care</h2><hr/></div>
+<div class="product-grid">
+<div class="product-card" data-cat="foot" data-name="Effervescent Tablets Hand Foot"><div class="product-img-wrap"><img alt="Effervescent Tablets Hand Foot" loading="lazy" src="product-images/product_113.jpg"/></div>
+<div class="product-name">Effervescent Soak Tablets</div>
+<div class="product-orig">泡腾片（手/足）</div>
+<div class="product-price">¥65</div>
+<span class="product-note">Ball (hand) · Tablet (foot)</span>
+</div>
+<div class="product-card" data-cat="foot" data-name="Foot Softener"><div class="product-img-wrap"><img alt="Foot Softener" loading="lazy" src="product-images/product_114.jpg"/></div>
+<div class="product-name">Foot Softener</div>
+<div class="product-orig">足底软化剂</div>
+<div class="product-price">¥38</div>
+</div>
+<div class="product-card" data-cat="foot" data-name="Disposable Foot Soak Bag"><div class="product-img-wrap"><img alt="Disposable Foot Soak Bag" loading="lazy" src="product-images/product_099.jpg"/></div>
+<div class="product-name">Disposable Foot Soak Bag</div>
+<div class="product-orig">一次性泡脚袋</div>
+<div class="product-price">¥5</div>
+</div>
+<div class="product-card" data-cat="foot" data-name="Disposable Foot File"><div class="product-img-wrap"><img alt="Disposable Foot File" loading="lazy" src="product-images/product_100.jpg"/></div>
+<div class="product-name">Disposable Foot File</div>
+<div class="product-orig">一次性脚搓</div>
+<div class="product-price">¥15</div>
+<span class="product-note">20/pack</span>
+</div>
+<div class="product-card" data-cat="foot" data-name="Stainless Steel Foot File"><div class="product-img-wrap"><img alt="Stainless Steel Foot File" loading="lazy" src="product-images/product_101.jpg"/></div>
+<div class="product-name">Stainless Steel Foot File</div>
+<div class="product-orig">不锈钢脚挫</div>
+<div class="product-price">¥25</div>
+</div>
+<div class="product-card" data-cat="foot" data-name="Cotton Toe Separators"><div class="product-img-wrap"><img alt="Cotton Toe Separators" loading="lazy" src="product-images/product_102.jpg"/></div>
+<div class="product-name">Cotton Toe Separators</div>
+<div class="product-orig">分趾棉</div>
+<div class="product-price">¥20</div>
+<span class="product-note">100 pairs/pack</span>
+</div>
+<div class="product-card" data-cat="foot" data-name="Disposable Foot Towel"><div class="product-img-wrap"><img alt="Disposable Foot Towel" loading="lazy" src="product-images/product_103.jpg"/></div>
+<div class="product-name">Disposable Foot Towel</div>
+<div class="product-orig">一次性垫脚巾</div>
+<div class="product-price">¥20</div>
+<span class="product-note">100/pack</span>
+</div>
+</div>
+</div>
+<!-- NO RESULTS -->
+<div class="no-results" id="noResults" style="display:none;">
+<div class="icon">🔍</div>
+<p data-i18n="no_results">No products match your search.</p>
+</div>
+</div>
+</main>
+<!-- FOOTER -->
+<footer>
+<div class="footer-inner">
+<div class="footer-brand">
+<img alt="Primavera" onerror="this.style.display='none'" src="logo_primavera.jpg"/>
+<div class="footer-tagline" data-i18n="footer_tag">Spring Beauty · Quality from Source to Salon</div>
+</div>
+<div class="footer-links">
+<a data-i18n="nav_market" href="report.html">Market</a>
+<a data-i18n="nav_franchise" href="franchise.html">Franchise</a>
+<a data-i18n="nav_startup_plain" href="index.html">Startup Guide</a>
+<a data-i18n="nav_calc_plain" href="calculator.html">Calculator</a>
+<a data-i18n="nav_products_plain" href="products.html">Tools Catalog</a>
+</div>
+<div class="footer-copy" data-i18n="footer_copy">© 2026 Primavera Beauty Co. Confidential business prospectus.</div>
+</div>
+</footer>
+<script>
+/* ── i18n ── */
+const t = {
+  en: {
+    nav_explore:"Explore",nav_market:"Market",nav_countries:"Countries",
+    nav_tech:"Technology",nav_swot:"SWOT",nav_regs:"Regulations",nav_fin:"Financials",
+    nav_franchise:"Franchise",nav_startup:"📋 Startup Guide",nav_calc:"💰 Calculator",
+    nav_products:"🛒 Tools Catalog",nav_products_plain:"Tools Catalog",
+    nav_startup_plain:"Startup Guide",nav_calc_plain:"Calculator",
+    hero_tag:"China Supplier · Direct Source",
+    hero_h:"Startup Tools Catalog",
+    hero_sub:"Everything a nail artist needs to open their first studio — sourced directly from our China supplier. Prices in Chinese Yuan (¥ RMB).",
+    stat1:"Products",stat2:"Categories",stat3:"Price Range",
+    currency_note:"💱 Prices in ¥ RMB (Chinese Yuan)",
+    search_placeholder:"Search products...",
+    cat_all:"All",cat_files:"Files & Buffers",cat_cuticle:"Cuticle Tools",
+    cat_tools:"Brushes & Pens",cat_liquids:"Oils & Liquids",cat_supplies:"Supplies",
+    cat_armrests:"Arm Rests",cat_lamps:"Lamps",cat_dust:"Dust Collectors",
+    cat_drills:"Nail Drills",cat_gel:"Tips & Gel",cat_hygiene:"PPE & Hygiene",
+    cat_foot:"Foot Care",
+    footer_tag:"Spring Beauty · Quality from Source to Salon",
+    footer_copy:"© 2026 Primavera Beauty Co. Confidential business prospectus.",
+    no_results:"No products match your search.",
+  },
+  es: {
+    nav_explore:"Explorar",nav_market:"Mercado",nav_countries:"Países",
+    nav_tech:"Tecnología",nav_swot:"FODA",nav_regs:"Regulaciones",nav_fin:"Finanzas",
+    nav_franchise:"Franquicia",nav_startup:"📋 Guía de Inicio",nav_calc:"💰 Calculadora",
+    nav_products:"🛒 Catálogo",nav_products_plain:"Catálogo de Herramientas",
+    nav_startup_plain:"Guía de Inicio",nav_calc_plain:"Calculadora",
+    hero_tag:"Proveedor China · Fuente Directa",
+    hero_h:"Catálogo de Herramientas",
+    hero_sub:"Todo lo que una nail artist necesita para abrir su primer estudio — directo de nuestro proveedor en China. Precios en Yuan Chino (¥ RMB).",
+    stat1:"Productos",stat2:"Categorías",stat3:"Rango de Precio",
+    currency_note:"💱 Precios en ¥ RMB (Yuan Chino)",
+    search_placeholder:"Buscar productos...",
+    cat_all:"Todo",cat_files:"Limas y Buffers",cat_cuticle:"Herr. de Cutícula",
+    cat_tools:"Brochas y Plumas",cat_liquids:"Aceites y Líquidos",cat_supplies:"Suministros",
+    cat_armrests:"Descansabrazos",cat_lamps:"Lámparas",cat_dust:"Extractores",
+    cat_drills:"Torno de Uñas",cat_gel:"Tips y Gel",cat_hygiene:"EPP e Higiene",
+    cat_foot:"Cuidado del Pie",
+    footer_tag:"Spring Beauty · Calidad de Fábrica a Salón",
+    footer_copy:"© 2026 Primavera Beauty Co. Prospecto de negocio confidencial.",
+    no_results:"No se encontraron productos.",
+  }
+};
+
+let lang = 'en';
+function setLang(l){
+  lang = l;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k = el.dataset.i18n;
+    if(t[l][k]) el.textContent = t[l][k];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{
+    const k = el.dataset.i18nPlaceholder;
+    if(t[l][k]) el.placeholder = t[l][k];
+  });
+  document.querySelectorAll('.lb').forEach(b=>b.classList.toggle('active', b.textContent===l.toUpperCase()));
+}
+
+/* ── Category filter ── */
+let activeCategory = 'all';
+function setCategory(btn){
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  activeCategory = btn.dataset.cat;
+  filterProducts();
+}
+
+/* ── Search + filter ── */
+function filterProducts(){
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const cards = document.querySelectorAll('.product-card');
+  let visible = 0;
+
+  // Show/hide sections
+  document.querySelectorAll('.cat-section').forEach(sec=>{
+    const secCat = sec.dataset.section;
+    const show = activeCategory === 'all' || activeCategory === secCat;
+    sec.style.display = show ? '' : 'none';
+  });
+
+  cards.forEach(card=>{
+    const cat = card.dataset.cat;
+    const name = (card.dataset.name || '').toLowerCase();
+    const text = card.textContent.toLowerCase();
+    const catMatch = activeCategory === 'all' || activeCategory === cat;
+    const qMatch = !q || name.includes(q) || text.includes(q);
+    const show = catMatch && qMatch;
+    card.style.display = show ? '' : 'none';
+    if(show) visible++;
+  });
+
+  document.getElementById('noResults').style.display = visible === 0 ? 'block' : 'none';
+
+  // If searching, reveal all sections so results from any category show
+  if(q){
+    document.querySelectorAll('.cat-section').forEach(sec=>{
+      const hasVisible = [...sec.querySelectorAll('.product-card')].some(c=>c.style.display!=='none');
+      sec.style.display = hasVisible ? '' : 'none';
+    });
+  }
+
+  // Update count on "All" button
+  document.querySelector('[data-cat="all"] .cnt').textContent = visible;
+}
+
+/* ── Dropdown nav ── */
+document.querySelectorAll('.has-drop').forEach(li=>{
+  const btn = li.querySelector('.nav-drop-btn');
+  btn.addEventListener('click',e=>{e.stopPropagation();li.classList.toggle('open');});
+});
+document.addEventListener('click',()=>document.querySelectorAll('.has-drop').forEach(li=>li.classList.remove('open')));
+</script>
+</body>
+</html>
