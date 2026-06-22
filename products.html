@@ -162,9 +162,10 @@ footer{background:var(--dark);color:rgba(255,255,255,.75);padding:3rem 2rem 2rem
 .product-img-placeholder{font-size:2rem;opacity:.3;}
 
 /* ── CTA BUTTON (q-trigger) ── */
-.q-trigger{position:relative;display:flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,var(--rose) 0%,#E8956A 100%);color:#fff;border:none;border-radius:50px;padding:.55rem .8rem;font-size:.82rem;font-weight:700;letter-spacing:.04em;cursor:pointer;white-space:nowrap;box-shadow:0 3px 14px rgba(207,123,96,.45);transition:transform .2s,box-shadow .2s;overflow:hidden;}
+.q-trigger{position:relative;display:flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,var(--rose) 0%,#E8956A 100%);color:#fff;border:none;border-radius:50px;padding:.55rem 1.25rem .55rem .9rem;font-size:.82rem;font-weight:700;letter-spacing:.04em;cursor:pointer;white-space:nowrap;box-shadow:0 3px 14px rgba(207,123,96,.45);transition:transform .2s,box-shadow .2s;overflow:hidden;}
 .q-trigger:hover{transform:translateY(-1px);box-shadow:0 5px 20px rgba(207,123,96,.55);}
-.q-trigger-text{display:none;}
+.q-trigger-text{position:relative;z-index:1;}
+@media(max-width:900px){.q-trigger-text{display:none;}.q-trigger{padding:.55rem .8rem;}}
 .q-pulse{position:absolute;inset:0;border-radius:50px;background:rgba(255,255,255,.15);animation:qPulse 2.5s ease-in-out infinite;}
 @keyframes qPulse{0%,100%{opacity:0}50%{opacity:1}}
 .q-gift{position:relative;z-index:1;}
@@ -177,7 +178,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.75);padding:3rem 2rem 2rem
 <ul class="nav-links">
 <li><a data-i18n="nav_franchise" href="franchise.html">Franchise</a></li>
 <li><a data-i18n="nav_startup" href="startup.html" style="color:var(--sage);font-weight:700;">📋 Startup Guide</a></li>
-<li><a data-i18n="nav_calc" href="calculator.html" style="">💰 Calculator</a></li>
+<li><a data-i18n="nav_calc" href="calculator.html" style="color:var(--rose);font-weight:700;">💰 Calculator</a></li>
 <li><a data-i18n="nav_products" href="#" onclick="return false;" style="color:var(--rose);font-weight:700;">🛒 Tools Catalog</a></li>
 </ul>
 <div class="lang-sw">
