@@ -156,8 +156,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.75);padding:3rem 2rem 2rem
 }
 
 /* ── PRODUCT IMAGES ── */
-.product-img-wrap{width:100%;aspect-ratio:1/1;overflow:hidden;border-radius:10px;background:#fff;border:1px solid var(--border);margin-bottom:.5rem;display:flex;align-items:center;justify-content:center;}
-.product-img-wrap img{width:100%;height:100%;object-fit:contain;transition:transform .3s ease;}
+.product-img-wrap{width:100%;aspect-ratio:1/1;overflow:hidden;border-radius:8px;background:var(--bg-soft);margin-bottom:.5rem;display:flex;align-items:center;justify-content:center;}
+.product-img-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .3s ease;}
 .product-card:hover .product-img-wrap img{transform:scale(1.04);}
 .product-img-placeholder{font-size:2rem;opacity:.3;}
 
@@ -169,6 +169,28 @@ footer{background:var(--dark);color:rgba(255,255,255,.75);padding:3rem 2rem 2rem
 .q-pulse{position:absolute;inset:0;border-radius:50px;background:rgba(255,255,255,.15);animation:qPulse 2.5s ease-in-out infinite;}
 @keyframes qPulse{0%,100%{opacity:0}50%{opacity:1}}
 .q-gift{position:relative;z-index:1;}
+
+
+/* ── HAMBURGER MENU ── */
+.ham-btn{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:40px;height:40px;background:none;border:none;cursor:pointer;padding:4px;border-radius:8px;transition:background .2s;z-index:1100;}
+.ham-btn:hover{background:var(--rose-l);}
+.ham-line{display:block;width:22px;height:2px;background:var(--dark);border-radius:2px;transition:transform .25s ease, opacity .2s ease;}
+.ham-btn.open .ham-line:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.ham-btn.open .ham-line:nth-child(2){opacity:0;}
+.ham-btn.open .ham-line:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+@media(max-width:900px){
+  .ham-btn{display:flex;}
+}
+/* Mobile nav drawer */
+.mob-nav{display:none;position:fixed;inset:0;top:64px;background:rgba(255,255,255,.98);backdrop-filter:blur(16px);z-index:999;flex-direction:column;padding:2rem 2rem 3rem;gap:0;overflow-y:auto;animation:mobSlide .22s ease;}
+@keyframes mobSlide{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.mob-nav.open{display:flex;}
+.mob-nav a,.mob-nav button.mob-nav-btn{display:block;width:100%;text-align:left;color:var(--text);text-decoration:none;font-size:1.05rem;font-weight:500;letter-spacing:.04em;text-transform:uppercase;padding:1rem 0;border-bottom:1px solid var(--border);background:none;border-top:none;border-left:none;border-right:none;cursor:pointer;font-family:var(--sans);transition:color .15s;}
+.mob-nav a:last-child{border-bottom:none;}
+.mob-nav a:hover,.mob-nav button.mob-nav-btn:hover{color:var(--rose);}
+.mob-nav a.mob-rose{color:var(--rose);font-weight:700;}
+.mob-nav a.mob-sage{color:var(--sage);font-weight:700;}
+.mob-nav-section{font-size:.68rem;letter-spacing:.12em;color:var(--muted);font-weight:700;text-transform:uppercase;padding:.75rem 0 .25rem;opacity:.6;}
 </style>
 </head>
 <body>
@@ -181,7 +203,11 @@ footer{background:var(--dark);color:rgba(255,255,255,.75);padding:3rem 2rem 2rem
 <li><a data-i18n="nav_calc" href="calculator.html" style="color:var(--rose);font-weight:700;">💰 Calculator</a></li>
 <li><a data-i18n="nav_products" href="#" onclick="return false;" style="color:var(--rose);font-weight:700;">🛒 Tools Catalog</a></li>
 </ul>
-<div class="lang-sw">
+<button aria-label="Menu" class="ham-btn" id="hamBtn" onclick="toggleMobNav()">
+<span class="ham-line"></span>
+<span class="ham-line"></span>
+<span class="ham-line"></span>
+</button><div class="lang-sw">
 <button class="lb active" onclick="setLang('en')">EN</button>
 <button class="lb" onclick="setLang('zh')">ZH</button>
 <button class="lb" onclick="setLang('es')">ES</button>
@@ -191,6 +217,11 @@ footer{background:var(--dark);color:rgba(255,255,255,.75);padding:3rem 2rem 2rem
 <span class="q-trigger-text">Comparte tu opinión · Recibe un regalo</span>
 <span class="q-pulse"></span>
 </button>
+</nav><nav class="mob-nav" id="mobNav">
+<a href="franchise.html" onclick="closeMobNav()">Franchise</a>
+<a class="mob-sage" href="startup.html" onclick="closeMobNav()">📋 Startup Guide</a>
+<a class="mob-rose" href="calculator.html" onclick="closeMobNav()">💰 Calculator</a>
+<a class="mob-rose" href="#" onclick="closeMobNav()">🛒 Tools Catalog</a>
 </nav>
 <!-- HERO -->
 <section class="hero">
@@ -1317,5 +1348,19 @@ document.body.style.paddingBottom = '70px';
 
 initCards();
 </script>
-</body>
+<script>
+function toggleMobNav(){
+  const btn = document.getElementById('hamBtn');
+  const nav = document.getElementById('mobNav');
+  const open = nav.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+function closeMobNav(){
+  document.getElementById('mobNav').classList.remove('open');
+  document.getElementById('hamBtn').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeMobNav(); });
+</script></body>
 </html>
