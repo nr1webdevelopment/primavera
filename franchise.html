@@ -340,6 +340,7 @@ h3{font-size:1.2rem}
 <li><a data-i18n="nav_startup" href="startup.html" style="color:var(--sage);font-weight:700;">📋 Startup Guide</a></li>
 <li><a data-i18n="nav_calc" href="calculator.html" style="color:var(--rose);font-weight:700;">💰 Calculator</a></li>
 <li><a data-i18n="nav_products" href="products.html">🛒 Tools Catalog</a></li>
+<li><a href="salons.html">📍 Salons</a></li>
 </ul>
 <button aria-label="Menu" class="ham-btn" id="hamBtn" onclick="toggleMobNav()">
 <span class="ham-line"></span>
@@ -361,6 +362,7 @@ h3{font-size:1.2rem}
 <a class="mob-sage" href="startup.html" onclick="closeMobNav()">📋 Startup Guide</a>
 <a class="mob-rose" href="calculator.html" onclick="closeMobNav()">💰 Calculator</a>
 <a class="" href="products.html" onclick="closeMobNav()">🛒 Tools Catalog</a>
+<a href="salons.html" onclick="closeMobNav()">📍 Salons</a>
 </nav>
 <!-- HERO -->
 <div style="background:linear-gradient(135deg,var(--rose-d) 0%,var(--rose) 60%,#E8956A 100%);padding:132px 2rem 72px;text-align:center;">
@@ -1525,5 +1527,75 @@ function closeMobNav(){
   document.body.style.overflow = '';
 }
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeMobNav(); });
-</script></body>
+</script>
+
+<!-- ── PASSWORD GATE ── -->
+<style>
+.pw-gate{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,rgba(160,80,56,.97) 0%,rgba(207,123,96,.95) 55%,rgba(232,154,112,.95) 100%),url('https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;display:flex;align-items:center;justify-content:center;padding:2rem;}
+.pw-box{background:#fff;border-radius:20px;padding:2.5rem 2rem;max-width:380px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(26,18,16,.3);}
+.pw-logo{font-family:Georgia,serif;font-size:2.5rem;color:var(--rose);letter-spacing:-.02em;margin-bottom:.25rem;}
+.pw-title{font-family:Georgia,serif;font-size:1.25rem;color:var(--dark);margin-bottom:.4rem;}
+.pw-sub{font-size:.85rem;color:var(--muted);margin-bottom:1.75rem;line-height:1.5;}
+.pw-input{width:100%;border:1.5px solid var(--border);border-radius:50px;padding:.65rem 1.25rem;font-size:.95rem;font-family:'Segoe UI',system-ui,sans-serif;color:var(--dark);outline:none;text-align:center;letter-spacing:.1em;transition:border-color .2s;background:var(--bg-soft);margin-bottom:.75rem;}
+.pw-input:focus{border-color:var(--rose);}
+.pw-input.shake{animation:pwShake .35s ease;}
+@keyframes pwShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pw-btn{width:100%;background:var(--rose);color:#fff;border:none;border-radius:50px;padding:.65rem 1.25rem;font-size:.9rem;font-weight:700;cursor:pointer;transition:background .2s;font-family:'Segoe UI',system-ui,sans-serif;}
+.pw-btn:hover{background:var(--rose-d);}
+.pw-error{font-size:.8rem;color:#DC3545;margin-top:.6rem;min-height:1.2em;transition:opacity .2s;}
+.pw-gate.fade-out{opacity:0;transition:opacity .3s ease;}
+</style>
+
+<div class="pw-gate" id="pwGate">
+  <div class="pw-box">
+    <div class="pw-logo">P</div>
+    <div class="pw-title">Partner Access</div>
+    <p class="pw-sub">This page is for Primavera partners only.<br>Enter your password to continue.</p>
+    <input class="pw-input" id="pwInput" type="password" placeholder="••••••••" autocomplete="current-password"/>
+    <button class="pw-btn" id="pwBtn">Enter →</button>
+    <div class="pw-error" id="pwError"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ── Set your password here ──
+  var PASS = '91106';
+
+  var gate  = document.getElementById('pwGate');
+  var input = document.getElementById('pwInput');
+  var btn   = document.getElementById('pwBtn');
+  var err   = document.getElementById('pwError');
+
+  // Already unlocked this session? Hide gate immediately.
+  if(sessionStorage.getItem('pv_franchise') === '1'){
+    gate.remove();
+    return;
+  }
+
+  // Block page scroll while gate is showing
+  document.body.style.overflow = 'hidden';
+
+  function attempt(){
+    if(input.value === PASS){
+      sessionStorage.setItem('pv_franchise','1');
+      gate.classList.add('fade-out');
+      setTimeout(function(){ gate.remove(); document.body.style.overflow = ''; }, 320);
+    } else {
+      err.textContent = 'Incorrect password — try again.';
+      input.value = '';
+      input.classList.remove('shake');
+      void input.offsetWidth; // reflow to restart animation
+      input.classList.add('shake');
+      input.focus();
+    }
+  }
+
+  btn.addEventListener('click', attempt);
+  input.addEventListener('keydown', function(e){ if(e.key === 'Enter') attempt(); });
+  input.focus();
+})();
+</script>
+
+</body>
 </html>

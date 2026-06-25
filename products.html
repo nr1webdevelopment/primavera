@@ -123,11 +123,16 @@ h1,h2,h3{font-family:var(--serif)}
 .order-total-num{font-family:var(--serif);font-size:1.4rem;color:var(--rose-d);}
 .order-note{font-size:.78rem;color:var(--muted);margin-top:1rem;line-height:1.6;background:var(--bg-soft);padding:.6rem .9rem;border-radius:10px;}
 .order-actions{display:flex;gap:.75rem;margin-top:1.25rem;}
-.order-copy,.order-wa{flex:1;text-align:center;padding:.6rem 1rem;border-radius:50px;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s;text-decoration:none;}
+.order-copy,.order-email,.order-wa{flex:1;text-align:center;padding:.6rem 1rem;border-radius:50px;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s;text-decoration:none;border:none;}
 .order-copy{background:var(--bg-soft);border:1.5px solid var(--border);color:var(--dark);}
 .order-copy:hover{border-color:var(--rose);color:var(--rose);}
-.order-wa{background:#25D366;border:none;color:#fff;}
+.order-email{background:var(--rose-l);border:1.5px solid var(--rose-mid);color:var(--rose-d);}
+.order-email:hover{background:var(--rose);color:#fff;}
+.order-email:disabled{opacity:.6;cursor:not-allowed;}
+.order-wa{background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;}
 .order-wa:hover{background:#1ebe5c;}
+.order-email-note{font-size:.72rem;color:var(--muted);text-align:center;margin-top:.5rem;display:none;}
+.order-email-note.visible{display:block;}
 .product-name{font-weight:600;font-size:.9rem;color:var(--dark);line-height:1.35;}
 .product-price{font-family:var(--serif);font-size:1.15rem;color:var(--rose-d);font-weight:400;}
 .product-note{display:inline-block;background:var(--bg-sage);color:var(--sage);font-size:.68rem;font-weight:600;padding:2px 8px;border-radius:10px;letter-spacing:.04em;}
@@ -198,6 +203,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.75);padding:3rem 2rem 2rem
 <li><a data-i18n="nav_startup" href="startup.html" style="color:var(--sage);font-weight:700;">📋 Startup Guide</a></li>
 <li><a data-i18n="nav_calc" href="calculator.html" style="color:var(--rose);font-weight:700;">💰 Calculator</a></li>
 <li><a data-i18n="nav_products" href="#" onclick="return false;" style="color:var(--rose);font-weight:700;">🛒 Tools Catalog</a></li>
+<li><a href="salons.html">📍 Salons</a></li>
 </ul>
 <button aria-label="Menu" class="ham-btn" id="hamBtn" onclick="toggleMobNav()">
 <span class="ham-line"></span>
@@ -218,6 +224,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.75);padding:3rem 2rem 2rem
 <a class="mob-sage" href="startup.html" onclick="closeMobNav()">📋 Startup Guide</a>
 <a class="mob-rose" href="calculator.html" onclick="closeMobNav()">💰 Calculator</a>
 <a class="mob-rose" href="#" onclick="closeMobNav()">🛒 Tools Catalog</a>
+<a href="salons.html" onclick="closeMobNav()">📍 Salons</a>
 </nav>
 <!-- HERO -->
 <section class="hero">
@@ -1008,9 +1015,11 @@ footer{background:var(--dark);color:rgba(255,255,255,.75);padding:3rem 2rem 2rem
 </div>
 <p class="order-note">Send this list to your Primavera supplier contact to confirm availability and pricing.</p>
 <div class="order-actions">
-<button class="order-copy" onclick="copyOrder()">📋 Copy List</button>
-<a class="order-wa" href="#" id="orderWA" target="_blank">💬 Send via WhatsApp</a>
+<button class="order-copy" onclick="copyOrder()">📋 Copy</button>
+<button class="order-email" id="emailBtn" onclick="sendOrderEmail(this)">📧 Email Order</button>
+<a class="order-wa" href="#" id="orderWA" target="_blank">💬 WhatsApp</a>
 </div>
+<div class="order-email-note" id="emailNote"></div>
 </div>
 </div>
 <!-- FOOTER -->
@@ -1301,6 +1310,62 @@ function copyOrder(){
     btn.textContent = '✓ Copied!';
     setTimeout(() => btn.textContent = '📋 Copy List', 2000);
   });
+}
+
+async function sendOrderEmail(btn){
+  // ── Replace with your Formspree endpoint after signing up at formspree.io ──
+  const ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID';
+
+  const ids = Object.keys(cart);
+  if(!ids.length) return;
+
+  let total = 0;
+  const lines = ids.map(id => {
+    const {qty, price, name} = cart[id];
+    total += price * qty;
+    return `${name} ×${qty} — ¥${(price * qty).toLocaleString()}`;
+  });
+
+  const note = document.getElementById('emailNote');
+  btn.textContent = '⏳ Sending…';
+  btn.disabled = true;
+  note.className = 'order-email-note';
+  note.textContent = '';
+
+  try {
+    const res = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+      body: JSON.stringify({
+        _subject: `Primavera Tools Order — ¥${total.toLocaleString()} (${ids.length} item${ids.length>1?'s':''})`,
+        order_summary: lines.join('\n'),
+        total: '¥' + total.toLocaleString(),
+        items: ids.length
+      })
+    });
+    if(res.ok){
+      btn.textContent = '✓ Sent!';
+      btn.style.background = 'var(--sage)';
+      btn.style.color = '#fff';
+      note.textContent = 'Order emailed to gary@garymakesart.com';
+      note.className = 'order-email-note visible';
+      setTimeout(() => {
+        btn.textContent = '📧 Email Order';
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.disabled = false;
+        note.className = 'order-email-note';
+      }, 4000);
+    } else {
+      throw new Error('not ok');
+    }
+  } catch(e){
+    btn.textContent = '📧 Email Order';
+    btn.disabled = false;
+    note.textContent = 'Could not send — use Copy or WhatsApp instead.';
+    note.className = 'order-email-note visible';
+    setTimeout(() => { note.className = 'order-email-note'; }, 4000);
+  }
 }
 
 function clearCart(){
