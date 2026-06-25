@@ -59,8 +59,10 @@
     '</nav>'
   ].join('\n');
 
-  // Inject synchronously before this script tag
-  document.currentScript.insertAdjacentHTML('beforebegin', html);
+  // Inject synchronously — replace the #site-nav placeholder
+  (document.getElementById('site-nav') || document.currentScript).insertAdjacentHTML('beforebegin', html);
+  var ph = document.getElementById('site-nav');
+  if (ph) ph.parentNode.removeChild(ph);
 
   // ── Nav functions (available immediately) ──
   window.toggleMobNav = function () {
