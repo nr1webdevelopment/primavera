@@ -59,10 +59,8 @@
     '</nav>'
   ].join('\n');
 
-  // Inject synchronously — replace the #site-nav placeholder
-  (document.getElementById('site-nav') || document.currentScript).insertAdjacentHTML('beforebegin', html);
-  var ph = document.getElementById('site-nav');
-  if (ph) ph.parentNode.removeChild(ph);
+  // Inject synchronously into the HTML stream
+  document.write(html);
 
   // ── Nav functions (available immediately) ──
   window.toggleMobNav = function () {
